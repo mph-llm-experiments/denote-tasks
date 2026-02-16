@@ -8,7 +8,7 @@ import (
 	"github.com/pdxmph/denote-tasks/internal/config"
 )
 
-var version = "0.17.2"
+var version = "0.17.3"
 var specVersion = "2.0.0"
 
 func main() {

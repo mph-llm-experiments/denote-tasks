@@ -195,10 +195,13 @@ func (m Model) renderFileList() string {
 	for i := start; i < end; i++ {
 		// Show divider if this is the position
 		if i == showDividerAt {
-			// Create a continuous line that matches the total width
-			// The format string adds spaces, so we need to account for those
-			// Total chars before project: roughly 106-110
-			divider := strings.Repeat("─", 106) + "→ due today"
+			// Create a responsive divider that adjusts to terminal width
+			label := "→ due today"
+			lineWidth := m.width - len(label) - 2 // Leave some margin
+			if lineWidth < 10 {
+				lineWidth = 10 // Minimum width
+			}
+			divider := strings.Repeat("─", lineWidth) + label
 			lines = append(lines, helpStyle.Render(divider))
 		}
 		
