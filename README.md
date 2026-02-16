@@ -53,6 +53,31 @@ denote-tasks --tui --area work
 - **Works with Denote** - Uses standard Denote file naming for compatibility
 - **Project support** - Organize tasks by project with automatic linking
 - **Dual interface** - Both CLI and TUI for different workflows
+- **Advanced filtering** - Query language with boolean expressions (AND/OR/NOT)
+- **Full-text search** - Search within task/project content, not just metadata
+- **JSON output** - Machine-readable output for AI agents and automation
+- **Batch operations** - Update multiple tasks with conditional filters
+
+### AI Agent Integration
+
+`denote-tasks` is designed to work seamlessly with AI agents like Claude, localgpt, and openclaw:
+
+- **JSON output** (`--json`) for all list/query commands enables programmatic parsing
+- **Query language** allows agents to construct complex filters without parsing CLI flags
+- **Full-text search** (`--search` or `content:`) helps agents find tasks by context
+- **Batch updates** enable agents to modify multiple tasks in one operation
+
+Example agent workflow:
+```bash
+# Agent searches for relevant tasks
+denote-tasks query "area:work AND content:API" --json | jq '.[] | .index_id'
+
+# Agent updates multiple tasks
+denote-tasks batch-update --where "tag:sprint-42 AND status:open" --status done
+
+# Agent creates task from conversation context
+denote-tasks new -p p1 --due "next monday" --area work "Implement OAuth flow"
+```
 
 ## Installation
 
@@ -76,10 +101,25 @@ denote-tasks new -p p1 --due tomorrow "Call client"
 # List tasks
 denote-tasks list
 denote-tasks list -p p1 --area work
+denote-tasks list --json  # Machine-readable output
+
+# Search in content
+denote-tasks list --search "API integration"
+denote-tasks project list --search "Q1"
+
+# Advanced queries with boolean logic
+denote-tasks query "status:open AND priority:p1"
+denote-tasks query "due:soon OR due:overdue"
+denote-tasks query "area:work AND content:blocker"
+denote-tasks query "(priority:p1 OR priority:p2) AND NOT status:done"
 
 # Update tasks (uses index_id from list)
 denote-tasks update -p p2 28
 denote-tasks done 28,35
+
+# Batch update with conditions
+denote-tasks batch-update --where "area:work AND status:paused" --status open
+denote-tasks batch-update --where "due:overdue" --priority p1 --dry-run
 
 # Add log entries
 denote-tasks log 28 "Found root cause"
@@ -91,6 +131,7 @@ denote-tasks --tui --area work  # Start filtered by area
 # Project management
 denote-tasks project new "Q1 Planning"
 denote-tasks project list
+denote-tasks project list --json
 denote-tasks project tasks 15  # Show tasks for project
 ```
 
@@ -109,7 +150,7 @@ denote-tasks project tasks 15  # Show tasks for project
 - `d` - Edit due date
 - `l` - Add log entry (tasks only)
 - `r` - Toggle sort order
-- `s` - Change task state
+- `s` - Change state (task: open/done/paused/delegated/dropped; project: active/completed/paused/cancelled)
 - `t` - Edit tags
 - `u` - Update task metadata
 - `x` - Delete task/project
@@ -134,6 +175,61 @@ denote-tasks project tasks 15  # Show tasks for project
 - `q` - Quit
 
 See [CLI Reference](docs/CLI_REFERENCE.md) for full command documentation.
+
+## Query Language
+
+The `query` command supports complex filtering with boolean expressions:
+
+**Boolean Operators:**
+- `AND` - Both conditions must be true
+- `OR` - Either condition must be true
+- `NOT` - Negate a condition
+- `( )` - Group expressions
+
+**Comparison Operators:**
+- `:` or `=` - Equals (case-insensitive)
+- `!=` - Not equals
+- `>` - Greater than (numbers only)
+- `<` - Less than (numbers only)
+
+**Searchable Fields:**
+- `status` - Task status (open, done, paused, delegated, dropped)
+- `priority` - Priority level (p1, p2, p3)
+- `area` - Context/area
+- `project_id` - Associated project (use "empty" or "set")
+- `assignee` - Person responsible
+- `due`, `due_date` - Due date or special values (overdue, today, week, soon, empty, set)
+- `start`, `start_date` - Start date (YYYY-MM-DD, empty, set)
+- `estimate` - Time estimate (Fibonacci numbers)
+- `title` - Task title
+- `tag`, `tags` - Tags (checks if any tag matches)
+- `content`, `body`, `text` - Full-text search in file content
+- `index_id` - Numeric ID
+
+**Examples:**
+
+```bash
+# High priority open tasks
+denote-tasks query "status:open AND priority:p1"
+
+# Tasks due soon or overdue
+denote-tasks query "due:soon OR due:overdue"
+
+# Work tasks with specific content
+denote-tasks query "area:work AND content:blocker"
+
+# Complex queries with grouping
+denote-tasks query "(priority:p1 OR priority:p2) AND NOT status:done"
+
+# Tasks without a project
+denote-tasks query "project_id:empty"
+
+# Tasks with estimates over 5
+denote-tasks query "estimate>5"
+
+# Combine with output formats
+denote-tasks query "status:open AND tag:v2mom" --json
+```
 
 ## Configuration
 
