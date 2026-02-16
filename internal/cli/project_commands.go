@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -204,10 +205,49 @@ func projectListCommand(cfg *config.Config) *Command {
 		// Sort projects
 		sortProjects(filtered, sortBy, reverse)
 
+		// Count tasks per project (needed for both JSON and text output)
+		tasks, _ := scanner.FindTasks()
+		taskCounts := make(map[string]int)
+		for _, t := range tasks {
+			if t.TaskMetadata.ProjectID != "" {
+				taskCounts[t.TaskMetadata.ProjectID]++
+			}
+		}
+
 		// Display projects
 		if globalFlags.JSON {
-			// TODO: JSON output
-			return fmt.Errorf("JSON output not yet implemented")
+			// Create JSON output structure
+			type ProjectJSON struct {
+				denote.Project
+				TaskCount int `json:"task_count"`
+			}
+
+			type Output struct {
+				Projects []ProjectJSON `json:"projects"`
+				Count    int           `json:"count"`
+			}
+
+			// Build JSON output with task counts
+			jsonProjects := make([]ProjectJSON, len(filtered))
+			for i, p := range filtered {
+				jsonProjects[i] = ProjectJSON{
+					Project:   *p,
+					TaskCount: taskCounts[p.File.ID],
+				}
+			}
+
+			output := Output{
+				Projects: jsonProjects,
+				Count:    len(filtered),
+			}
+
+			// Marshal and print
+			jsonBytes, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal JSON: %w", err)
+			}
+			fmt.Println(string(jsonBytes))
+			return nil
 		}
 
 		// Color setup
@@ -225,15 +265,6 @@ func projectListCommand(cfg *config.Config) *Command {
 		// Display header
 		if !globalFlags.Quiet {
 			fmt.Printf("Projects (%d):\n\n", len(filtered))
-		}
-
-		// Count tasks per project
-		tasks, _ := scanner.FindTasks()
-		taskCounts := make(map[string]int)
-		for _, t := range tasks {
-			if t.TaskMetadata.ProjectID != "" {
-				taskCounts[t.TaskMetadata.ProjectID]++
-			}
 		}
 
 		// Display projects
@@ -394,6 +425,28 @@ func projectTasksCommand(cfg *config.Config) *Command {
 
 		// Sort tasks
 		sortProjectTasks(projectTasks, sortBy, false)
+
+		// JSON output
+		if globalFlags.JSON {
+			type Output struct {
+				Project *denote.Project `json:"project"`
+				Tasks   []*denote.Task  `json:"tasks"`
+				Count   int             `json:"task_count"`
+			}
+
+			output := Output{
+				Project: targetProject,
+				Tasks:   projectTasks,
+				Count:   len(projectTasks),
+			}
+
+			jsonBytes, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal JSON: %w", err)
+			}
+			fmt.Println(string(jsonBytes))
+			return nil
+		}
 
 		// Display project header
 		fmt.Printf("Project: %s\n", targetProject.ProjectMetadata.Title)

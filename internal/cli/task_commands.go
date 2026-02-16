@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pdxmph/denote-tasks/internal/config"
 	"github.com/pdxmph/denote-tasks/internal/denote"
+	"github.com/pdxmph/denote-tasks/internal/query"
 	"github.com/pdxmph/denote-tasks/internal/task"
 )
 
@@ -25,6 +27,7 @@ func TaskCommand(cfg *config.Config) *Command {
 	cmd.Subcommands = []*Command{
 		taskNewCommand(cfg),
 		taskListCommand(cfg),
+		taskQueryCommand(cfg),
 		taskUpdateCommand(cfg),
 		taskDoneCommand(cfg),
 		taskLogCommand(cfg),
@@ -87,8 +90,8 @@ func taskNewCommand(cfg *config.Config) *Command {
 			dueDate = parsed
 		}
 
-		// Create the task
-		taskFile, err := task.CreateTask(cfg.NotesDirectory, title, "", tagList, area)
+		// Create the task (use global area flag)
+		taskFile, err := task.CreateTask(cfg.NotesDirectory, title, "", tagList, globalFlags.Area)
 		if err != nil {
 			return fmt.Errorf("failed to create task: %v", err)
 		}
@@ -255,8 +258,38 @@ func taskListCommand(cfg *config.Config) *Command {
 
 		// Display tasks
 		if globalFlags.JSON {
-			// TODO: JSON output
-			return fmt.Errorf("JSON output not yet implemented")
+			// Create JSON output structure
+			type TaskJSON struct {
+				denote.Task
+				ProjectName string `json:"project_name,omitempty"`
+			}
+
+			type Output struct {
+				Tasks []TaskJSON `json:"tasks"`
+				Count int        `json:"count"`
+			}
+
+			// Build JSON output with project names
+			jsonTasks := make([]TaskJSON, len(tasks))
+			for i, t := range tasks {
+				jsonTasks[i] = TaskJSON{
+					Task:        t,
+					ProjectName: projectNames[t.ProjectID],
+				}
+			}
+
+			output := Output{
+				Tasks: jsonTasks,
+				Count: len(tasks),
+			}
+
+			// Marshal and print
+			jsonBytes, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal JSON: %w", err)
+			}
+			fmt.Println(string(jsonBytes))
+			return nil
 		}
 
 		// Color setup
@@ -747,4 +780,192 @@ func taskDeleteCommand(cfg *config.Config) *Command {
 			return fmt.Errorf("not yet implemented")
 		},
 	}
+}
+
+// taskQueryCommand allows complex filtering with boolean expressions
+func taskQueryCommand(cfg *config.Config) *Command {
+	var sortBy string
+	var reverse bool
+
+	cmd := &Command{
+		Name:        "query",
+		Usage:       "denote-tasks query <expression> [options]",
+		Description: "Query tasks with complex filter expressions",
+		Flags:       flag.NewFlagSet("task-query", flag.ExitOnError),
+	}
+
+	cmd.Flags.StringVar(&sortBy, "sort", "modified", "Sort by: priority, due, created, modified")
+	cmd.Flags.BoolVar(&reverse, "r", false, "Reverse sort order")
+	cmd.Flags.BoolVar(&reverse, "reverse", false, "Reverse sort order")
+
+	cmd.Run = func(c *Command, args []string) error {
+		if len(args) == 0 {
+			return fmt.Errorf("query expression required\n\nExamples:\n  denote-tasks query \"status:open AND priority:p1\"\n  denote-tasks query \"area:work AND (priority:p1 OR priority:p2)\"\n  denote-tasks query \"due:soon AND NOT status:done\"")
+		}
+
+		// Query is the first argument (should be quoted if it contains spaces)
+		queryStr := args[0]
+
+		// Parse the query
+		ast, err := query.Parse(queryStr)
+		if err != nil {
+			return fmt.Errorf("query parse error: %v", err)
+		}
+
+		// Get all tasks
+		scanner := denote.NewScanner(cfg.NotesDirectory)
+		allTasks, err := scanner.FindTasks()
+		if err != nil {
+			return fmt.Errorf("failed to find tasks: %v", err)
+		}
+
+		// Get project names for display
+		projects, _ := scanner.FindProjects()
+		projectNames := make(map[string]string)
+		for _, p := range projects {
+			projectNames[p.File.ID] = p.ProjectMetadata.Title
+		}
+
+		// Evaluate query against all tasks
+		var tasks []denote.Task
+		for _, t := range allTasks {
+			if ast.Evaluate(t, cfg) {
+				tasks = append(tasks, *t)
+			}
+		}
+
+		// Sort tasks
+		sortTasks(tasks, sortBy, reverse)
+
+		// Display tasks
+		if globalFlags.JSON {
+			// Create JSON output structure
+			type TaskJSON struct {
+				denote.Task
+				ProjectName string `json:"project_name,omitempty"`
+			}
+
+			type Output struct {
+				Tasks []TaskJSON `json:"tasks"`
+				Count int        `json:"count"`
+			}
+
+			// Build JSON output with project names
+			jsonTasks := make([]TaskJSON, len(tasks))
+			for i, t := range tasks {
+				jsonTasks[i] = TaskJSON{
+					Task:        t,
+					ProjectName: projectNames[t.ProjectID],
+				}
+			}
+
+			output := Output{
+				Tasks: jsonTasks,
+				Count: len(tasks),
+			}
+
+			// Marshal and print
+			jsonBytes, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal JSON: %w", err)
+			}
+			fmt.Println(string(jsonBytes))
+			return nil
+		}
+
+		// Color setup
+		if globalFlags.NoColor || color.NoColor {
+			color.NoColor = true
+		}
+
+		// Status colors
+		doneColor := color.New(color.FgGreen)
+		overdueColor := color.New(color.FgRed, color.Bold)
+		priorityHighColor := color.New(color.FgRed, color.Bold)
+		priorityMedColor := color.New(color.FgYellow)
+
+		// Display header
+		if !globalFlags.Quiet {
+			fmt.Printf("Tasks (%d):\n\n", len(tasks))
+		}
+
+		// Display tasks with clean, TUI-like formatting
+		for _, t := range tasks {
+			// Status icon
+			status := "○"
+			switch t.TaskMetadata.Status {
+			case denote.TaskStatusDone:
+				status = doneColor.Sprint("✓")
+			case denote.TaskStatusPaused:
+				status = "⏸"
+			case denote.TaskStatusDropped:
+				status = "⨯"
+			case denote.TaskStatusDelegated:
+				status = "→"
+			}
+
+			// Priority with color
+			priority := "   "
+			if t.TaskMetadata.Priority != "" {
+				switch t.TaskMetadata.Priority {
+				case denote.PriorityP1:
+					priority = priorityHighColor.Sprintf("[%s]", t.TaskMetadata.Priority)
+				case denote.PriorityP2:
+					priority = priorityMedColor.Sprintf("[%s]", t.TaskMetadata.Priority)
+				default:
+					priority = fmt.Sprintf("[%s]", t.TaskMetadata.Priority)
+				}
+			}
+
+			// Due date with color if overdue
+			due := "            "
+			if t.TaskMetadata.DueDate != "" {
+				if denote.IsOverdue(t.TaskMetadata.DueDate) && t.TaskMetadata.Status != denote.TaskStatusDone {
+					due = overdueColor.Sprintf("[%s]", t.TaskMetadata.DueDate)
+				} else {
+					due = fmt.Sprintf("[%s]", t.TaskMetadata.DueDate)
+				}
+			}
+
+			// Title (truncate if too long)
+			title := t.TaskMetadata.Title
+			if len(title) > 50 {
+				title = title[:47] + "..."
+			}
+
+			// Area
+			area := ""
+			if t.TaskMetadata.Area != "" {
+				area = t.TaskMetadata.Area
+			}
+
+			// Project name
+			projectName := ""
+			if t.TaskMetadata.ProjectID != "" {
+				if name, ok := projectNames[t.TaskMetadata.ProjectID]; ok && name != "" {
+					projectName = "→ " + name
+				} else {
+					// Fallback to ID if name not found
+					projectName = "→ " + t.TaskMetadata.ProjectID
+				}
+			}
+
+			// Build the line with fixed-width columns
+			line := fmt.Sprintf("%3d %s %s %s  %-50s %-10s %s",
+				t.TaskMetadata.IndexID,
+				status,
+				priority,
+				due,
+				title,
+				area,
+				projectName,
+			)
+
+			fmt.Println(line)
+		}
+
+		return nil
+	}
+
+	return cmd
 }

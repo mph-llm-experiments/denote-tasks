@@ -356,9 +356,9 @@ func (m Model) renderTaskLine(index int, file denote.File, task *denote.Task) st
 		due = strings.Repeat(" ", ColumnWidthDueSpaces)
 	}
 	
-	// Tags - filter out 'task' and 'project'
+	// Tags - use metadata tags (from YAML frontmatter), not filename tags
 	var displayTags []string
-	for _, tag := range file.Tags {
+	for _, tag := range task.TaskMetadata.Tags {
 		if tag != "task" && tag != "project" {
 			displayTags = append(displayTags, tag)
 		}
@@ -486,9 +486,9 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 		isOverdue = denote.IsOverdue(project.ProjectMetadata.DueDate)
 	}
 	
-	// Tags - filter out 'task' and 'project'
+	// Tags - use metadata tags (from YAML frontmatter), not filename tags
 	var displayTags []string
-	for _, tag := range file.Tags {
+	for _, tag := range project.ProjectMetadata.Tags {
 		if tag != "task" && tag != "project" {
 			displayTags = append(displayTags, tag)
 		}
@@ -497,11 +497,11 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 	if len(displayTags) > 0 {
 		tagStr = fmt.Sprintf("[%s]", strings.Join(displayTags, ", "))
 	}
-	
-	
+
+
 	// Build the line - exactly matching task format
 	// Format: selector status priority due title tags area project
-	
+
 	// For priority, apply the color now
 	if priorityRaw != "" {
 		switch project.ProjectMetadata.Priority {

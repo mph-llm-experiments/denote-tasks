@@ -7,12 +7,12 @@ import (
 
 // File represents the basic Denote file structure
 type File struct {
-	ID      string    // Denote timestamp ID (e.g., "20250704T151739")
-	Title   string    // Human-readable title from slug
-	Slug    string    // Kebab-case title from filename
-	Tags    []string  // Tags from filename
-	Path    string    // Full file path
-	ModTime time.Time // File modification time
+	ID      string    `json:"denote_id"`           // Denote timestamp ID (e.g., "20250704T151739")
+	Title   string    `json:"-"`                   // Human-readable title from slug (don't serialize, use metadata title)
+	Slug    string    `json:"slug,omitempty"`      // Kebab-case title from filename
+	Tags    []string  `json:"filename_tags,omitempty"` // Tags from filename
+	Path    string    `json:"path,omitempty"`      // Full file path
+	ModTime time.Time `json:"-"`                   // File modification time (don't serialize, use Task/Project ModTime)
 }
 
 // IsTask checks if the file is a task based on tags
@@ -98,47 +98,47 @@ type NoteMetadata struct {
 
 // TaskMetadata represents task-specific frontmatter per spec v2.0.0
 type TaskMetadata struct {
-	Title     string   `yaml:"title"`               // Required: Human-readable title
-	IndexID   int      `yaml:"index_id"`            // Required: Sequential ID for CLI
-	Type      string   `yaml:"type,omitempty"`      // Optional: "task" (determined by __task tag)
-	Status    string   `yaml:"status,omitempty"`    // Default: "open"
-	Priority  string   `yaml:"priority,omitempty"`  // p1, p2, p3
-	DueDate   string   `yaml:"due_date,omitempty"`  // YYYY-MM-DD format
-	StartDate string   `yaml:"start_date,omitempty"` // YYYY-MM-DD format
-	Estimate  int      `yaml:"estimate,omitempty"`  // Fibonacci: 1,2,3,5,8,13
-	ProjectID string   `yaml:"project_id,omitempty"` // Denote ID of project (v2.0.0)
-	Area      string   `yaml:"area,omitempty"`      // Life context
-	Assignee  string   `yaml:"assignee,omitempty"`  // Person responsible
-	Tags      []string `yaml:"tags,omitempty"`      // Additional tags beyond filename
+	Title     string   `yaml:"title" json:"title"`                      // Required: Human-readable title
+	IndexID   int      `yaml:"index_id" json:"index_id"`                // Required: Sequential ID for CLI
+	Type      string   `yaml:"type,omitempty" json:"type,omitempty"`    // Optional: "task" (determined by __task tag)
+	Status    string   `yaml:"status,omitempty" json:"status,omitempty"` // Default: "open"
+	Priority  string   `yaml:"priority,omitempty" json:"priority,omitempty"` // p1, p2, p3
+	DueDate   string   `yaml:"due_date,omitempty" json:"due_date,omitempty"` // YYYY-MM-DD format
+	StartDate string   `yaml:"start_date,omitempty" json:"start_date,omitempty"` // YYYY-MM-DD format
+	Estimate  int      `yaml:"estimate,omitempty" json:"estimate,omitempty"` // Fibonacci: 1,2,3,5,8,13
+	ProjectID string   `yaml:"project_id,omitempty" json:"project_id,omitempty"` // Denote ID of project (v2.0.0)
+	Area      string   `yaml:"area,omitempty" json:"area,omitempty"`    // Life context
+	Assignee  string   `yaml:"assignee,omitempty" json:"assignee,omitempty"` // Person responsible
+	Tags      []string `yaml:"tags,omitempty" json:"tags,omitempty"`    // Additional tags beyond filename
 }
 
 // ProjectMetadata represents project-specific frontmatter per spec v2.0.0
 type ProjectMetadata struct {
-	Title     string   `yaml:"title"`               // Required: Human-readable title
-	IndexID   int      `yaml:"index_id"`            // Required: Sequential ID for CLI
-	Type      string   `yaml:"type,omitempty"`      // Optional: "project" (determined by __project tag)
-	Status    string   `yaml:"status,omitempty"`    // Default: "active"
-	Priority  string   `yaml:"priority,omitempty"`  // p1, p2, p3
-	DueDate   string   `yaml:"due_date,omitempty"`  // YYYY-MM-DD format
-	StartDate string   `yaml:"start_date,omitempty"` // YYYY-MM-DD format
-	Area      string   `yaml:"area,omitempty"`      // Life context
-	Tags      []string `yaml:"tags,omitempty"`      // Additional tags beyond filename
+	Title     string   `yaml:"title" json:"title"`                      // Required: Human-readable title
+	IndexID   int      `yaml:"index_id" json:"index_id"`                // Required: Sequential ID for CLI
+	Type      string   `yaml:"type,omitempty" json:"type,omitempty"`    // Optional: "project" (determined by __project tag)
+	Status    string   `yaml:"status,omitempty" json:"status,omitempty"` // Default: "active"
+	Priority  string   `yaml:"priority,omitempty" json:"priority,omitempty"` // p1, p2, p3
+	DueDate   string   `yaml:"due_date,omitempty" json:"due_date,omitempty"` // YYYY-MM-DD format
+	StartDate string   `yaml:"start_date,omitempty" json:"start_date,omitempty"` // YYYY-MM-DD format
+	Area      string   `yaml:"area,omitempty" json:"area,omitempty"`    // Life context
+	Tags      []string `yaml:"tags,omitempty" json:"tags,omitempty"`    // Additional tags beyond filename
 }
 
 // Task combines File info with TaskMetadata
 type Task struct {
 	File
 	TaskMetadata
-	ModTime time.Time
-	Content string // Full file content
+	ModTime time.Time `json:"modified_at"` // File modification time
+	Content string    `json:"-"`           // Don't serialize full content in lists
 }
 
 // Project combines File info with ProjectMetadata
 type Project struct {
 	File
 	ProjectMetadata
-	ModTime time.Time
-	Content string
+	ModTime time.Time `json:"modified_at"` // File modification time
+	Content string    `json:"-"`           // Don't serialize full content in lists
 }
 
 // Common status values
