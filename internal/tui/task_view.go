@@ -105,8 +105,12 @@ func (m Model) renderTaskView() string {
 		hints = append(hints, "e:estimate")
 		hints = append(hints, "l:log")
 	}
-	footer := "\n" + hintStyle.Render(strings.Join(hints, " • "))
-	sections = append(sections, footer)
+	// Join hints and wrap based on terminal width
+	hintsText := strings.Join(hints, " • ")
+	wrapped := hintStyle.
+		Width(m.width).
+		Render(hintsText)
+	sections = append(sections, "\n"+wrapped)
 	
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }

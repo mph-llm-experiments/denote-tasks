@@ -62,8 +62,11 @@ func (m Model) renderProjectView() string {
 	
 	// Footer with hints
 	hints := m.getProjectViewHints()
-	footer := "\n" + hintStyle.Render(strings.Join(hints, " • "))
-	sections = append(sections, footer)
+	hintsText := strings.Join(hints, " • ")
+	wrapped := hintStyle.
+		Width(m.width).
+		Render(hintsText)
+	sections = append(sections, "\n"+wrapped)
 	
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }
