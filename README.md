@@ -249,11 +249,28 @@ sort_by = "due"             # Default sort: due, priority, project, title, creat
 sort_order = "normal"       # normal or reverse
 ```
 
+## AI Agent Skill Installation
+
+For AI agents (Claude Code, etc.), install the skill file for enhanced integration:
+
+```bash
+# Create skill directory if it doesn't exist
+mkdir -p ~/.claude/skills/denote-tasks
+
+# Copy the skill file
+cp SKILL.md ~/.claude/skills/denote-tasks/
+
+# The skill will be automatically available to Claude-based agents
+```
+
+The skill file provides comprehensive guidance for AI agents, emphasizing machine-friendly features like JSON output, query language, and batch operations.
+
 ## Documentation
 
 - [Project Charter](PROJECT_CHARTER.md) - Vision and goals
 - [Denote Task Specification](docs/DENOTE_TASK_SPEC.md) - File format (v2.0.0)
 - [Architecture](docs/UNIFIED_ARCHITECTURE.md) - Technical design
+- [AI Agent Skill](SKILL.md) - Comprehensive guide for AI agents
 
 ## Task File Format
 
