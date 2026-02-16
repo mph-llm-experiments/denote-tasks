@@ -6,20 +6,45 @@ This file contains important context about the denote-tasks project to help AI a
 
 **denote-tasks** is a focused task management tool built on the Denote file naming convention. It uses Denote format for consistent file identification and backward compatibility while providing powerful task and project management features.
 
-### Current Status (2025-01-14)
+### Current Status (2026-02-15)
 
-- Basic CLI working (task and project commands)
-- TUI implementation for tasks (needs testing)
-- Following Denote Task Spec v2.0.0
-- Refactoring to task-only focus in progress
+- ✅ CLI fully functional with JSON output, query language, batch operations
+- ✅ TUI working with responsive layouts and proper state handling
+- ✅ Following Denote Task Spec v2.0.0
+- ✅ Task-only focus (no general notes support)
+- ✅ AI agent integration with comprehensive skill file
+- 🎯 Current version: v0.17.3
+
+## Session Continuity - READ AND UPDATE THESE!
+
+**🔴 CRITICAL: Start EVERY session by reading these files:**
+
+1. **`PROGRESS.md`** - Current session work and detailed implementation notes
+   - Read at session start to understand recent work
+   - Update with new session details and implementation notes
+   - Mark features as tested only after human verification
+
+2. **`CHANGELOG.md`** - Release history and user-facing changes
+   - Update when creating new releases
+   - Follow Keep a Changelog format
+
+3. **`~/.claude/.../memory/MEMORY.md`** - Persistent patterns and decisions
+   - Consult for known patterns and bug workarounds
+   - Update with new patterns, decisions, or gotchas discovered
+
+4. **GitHub Issues** - Feature tracking and roadmap
+   - Check for open issues to understand what's next
+   - Close issues when features are tested and complete
+
+**🔴 CRITICAL: Update these files as you work, not just at the end!**
 
 ## Important Documents
 
 **ALWAYS READ THESE FIRST:**
-- `REFACTORING_PLAN.md` - Current refactoring to task-only focus
+- `PROGRESS.md` - **MOST IMPORTANT** - Current session status and recent work
 - `PROJECT_CHARTER.md` - Vision, principles, and roadmap
 - `docs/DENOTE_TASK_SPEC.md` - File format specification (v2.0.0)
-- `PROGRESS.md` - Current session status
+- `~/.claude/.../memory/MEMORY.md` - Persistent patterns and decisions
 
 ## Architecture Principles
 
