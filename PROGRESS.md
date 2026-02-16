@@ -7,6 +7,73 @@ Features that compile but haven't been tested must be marked as "IMPLEMENTED BUT
 
 ---
 
+## Session: 2026-02-16 - Project Rename to "atask"
+
+### Summary
+
+Completed comprehensive project rename from "denote-tasks" to "atask" to better reflect the project's identity and agent-first focus, avoiding confusion with Prot's official Denote project.
+
+### Changes Completed ✅
+
+**1. Core Code Updates**
+- Go module renamed: `github.com/pdxmph/denote-tasks` → `github.com/pdxmph/atask`
+- Updated all import statements across 22 Go files
+- Binary renamed: `denote-tasks` → `atask`
+- Version output updated to show "atask v0.17.3"
+
+**2. Configuration & Paths**
+- Config directory: `~/.config/denote-tasks/` → `~/.config/atask/`
+- Updated config.go to use new default paths
+- Updated all example config files
+
+**3. Build & Release Infrastructure**
+- Updated build-and-release.sh for atask binary
+- Updated Makefile (BINARY := atask)
+- Renamed completion files: `_denote-tasks` → `_atask`, `denote-tasks.bash` → `atask.bash`
+- Updated completion file contents and install script
+- Updated .gitignore
+
+**4. Documentation**
+- Updated all markdown files: README, PROJECT_CHARTER, CLAUDE.md, PROGRESS.md
+- Updated all docs/ files
+- Updated SKILL.md with new binary name and installation path
+- Added migration guide to CHANGELOG.md
+
+**5. CLI Help & Messages**
+- Updated all usage strings in CLI commands
+- Updated help text to show "atask" instead of "denote-tasks"
+- Updated error messages and output
+
+**6. Scripts & Tools**
+- Updated all Python scripts in scripts/ directory
+- Updated shell scripts (debug_project_view.sh, etc.)
+
+### Files Changed
+- 53 files modified
+- 570 insertions, 554 deletions
+- All changes committed in single atomic commit
+
+### Next Steps for User
+
+**Repository & Installation:**
+1. Rename GitHub repository from "denote-tasks" to "atask"
+2. Update local directory name: `mv ~/code/denote-tasks ~/code/atask`
+3. Update git remote (will change after repo rename)
+
+**User Migration:**
+1. Rebuild binary: `go build -o atask .`
+2. Rename config: `mv ~/.config/denote-tasks ~/.config/atask`
+3. Update SKILL.md: `mv ~/.claude/skills/denote-tasks ~/.claude/skills/atask`
+4. Reinstall completions: `./install-completions.sh`
+5. Update any system PATH references
+
+**Breaking Changes:**
+- All command invocations change from `denote-tasks` to `atask`
+- Config directory location changes
+- Skill name changes for Claude agents
+
+---
+
 ## Session: 2026-02-15 (Evening) - Tag for Today Feature & TUI Alignment Fixes
 
 ### Summary
