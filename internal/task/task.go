@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pdxmph/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/denote"
 	"gopkg.in/yaml.v3"
 )
 

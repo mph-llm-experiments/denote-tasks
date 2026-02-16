@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/pdxmph/atask/internal/config"
-	"github.com/pdxmph/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/denote"
 )
 
 // CompletionCommand returns the completion command

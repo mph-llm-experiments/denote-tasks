@@ -12,9 +12,9 @@ import (
 	
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pdxmph/atask/internal/config"
-	"github.com/pdxmph/atask/internal/denote"
-	"github.com/pdxmph/atask/internal/task"
+	"github.com/mph-llm-experiments/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/task"
 )
 
 type Model struct {

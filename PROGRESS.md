@@ -16,7 +16,7 @@ Completed comprehensive project rename from "denote-tasks" to "atask" to better 
 ### Changes Completed ✅
 
 **1. Core Code Updates**
-- Go module renamed: `github.com/pdxmph/denote-tasks` → `github.com/pdxmph/atask`
+- Go module renamed: `github.com/pdxmph/denote-tasks` → `github.com/mph-llm-experiments/atask`
 - Updated all import statements across 22 Go files
 - Binary renamed: `denote-tasks` → `atask`
 - Version output updated to show "atask v0.17.3"

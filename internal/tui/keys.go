@@ -7,8 +7,8 @@ import (
 	"strings"
 	
 	"github.com/charmbracelet/bubbletea"
-	"github.com/pdxmph/atask/internal/denote"
-	"github.com/pdxmph/atask/internal/task"
+	"github.com/mph-llm-experiments/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/task"
 )
 
 func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {

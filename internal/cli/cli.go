@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pdxmph/atask/internal/config"
-	"github.com/pdxmph/atask/internal/tui"
+	"github.com/mph-llm-experiments/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/tui"
 )
 
 // Run executes the CLI with task-focused command structure

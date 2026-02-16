@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/pdxmph/atask/internal/config"
-	"github.com/pdxmph/atask/internal/denote"
-	"github.com/pdxmph/atask/internal/task"
+	"github.com/mph-llm-experiments/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/task"
 )
 
 // ProjectCommand creates the project command with all subcommands

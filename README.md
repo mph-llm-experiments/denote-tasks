@@ -35,7 +35,7 @@ That said:
 
 ```bash
 # Install
-go install github.com/pdxmph/atask@latest
+go install github.com/mph-llm-experiments/atask@latest
 
 # Create your first task
 atask new -p p1 --due tomorrow "Review pull request"
@@ -82,13 +82,13 @@ atask new -p p1 --due "next monday" --area work "Implement OAuth flow"
 ## Installation
 
 ```bash
-go install github.com/pdxmph/atask@latest
+go install github.com/mph-llm-experiments/atask@latest
 ```
 
 Or for a specific version:
 
 ```bash
-go install github.com/pdxmph/atask@v0.17.0
+go install github.com/mph-llm-experiments/atask@v0.17.0
 ```
 
 ## Usage

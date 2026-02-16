@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Project renamed from "denote-tasks" to "atask"**
   - Binary name: `denote-tasks` → `atask`
-  - Go module: `github.com/pdxmph/denote-tasks` → `github.com/pdxmph/atask`
+  - Go module: `github.com/pdxmph/denote-tasks` → `github.com/mph-llm-experiments/atask`
   - Config directory: `~/.config/denote-tasks/` → `~/.config/atask/`
   - Skill name: `denote-tasks` → `atask`
   - Completion files: `denote-tasks.bash`, `_denote-tasks` → `atask.bash`, `_atask`

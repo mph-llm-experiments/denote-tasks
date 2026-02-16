@@ -5,7 +5,7 @@ import (
 	"strings"
 	
 	"github.com/charmbracelet/bubbletea"
-	"github.com/pdxmph/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/denote"
 )
 
 func (m Model) handleTaskViewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {

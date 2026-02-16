@@ -6,7 +6,7 @@ import (
 	"strings"
 	
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pdxmph/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/denote"
 )
 
 func (m Model) handleProjectViewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {

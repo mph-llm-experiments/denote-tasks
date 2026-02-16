@@ -103,7 +103,7 @@ echo -e "\n${YELLOW}Step 5: Creating GitHub release...${NC}"
 if ! command -v gh &> /dev/null; then
     echo -e "${RED}Error: GitHub CLI (gh) not found. Install with: brew install gh${NC}"
     echo -e "${YELLOW}Alternatively, create the release manually at:${NC}"
-    echo "https://github.com/pdxmph/atask/releases/new?tag=$VERSION"
+    echo "https://github.com/mph-llm-experiments/atask/releases/new?tag=$VERSION"
     echo "Upload these files:"
     ls -la dist/*.tar.gz dist/checksums.txt
 else
@@ -115,13 +115,13 @@ else
 fi
 
 echo -e "\n${GREEN}✅ Release $VERSION completed successfully!${NC}"
-echo -e "${GREEN}View at: https://github.com/pdxmph/atask/releases/tag/$VERSION${NC}"
+echo -e "${GREEN}View at: https://github.com/mph-llm-experiments/atask/releases/tag/$VERSION${NC}"
 
 # Step 6: Update Homebrew formula
 echo -e "\n${YELLOW}Step 6: Updating Homebrew formula...${NC}"
 if [ -d "$HOME/code/homebrew-tap" ]; then
     # Calculate SHA256 for source archive
-    SOURCE_URL="https://github.com/pdxmph/atask/archive/refs/tags/${VERSION}.tar.gz"
+    SOURCE_URL="https://github.com/mph-llm-experiments/atask/archive/refs/tags/${VERSION}.tar.gz"
     echo "Downloading source archive for SHA calculation..."
     TEMP_SOURCE="/tmp/atask-source-${VERSION}.tar.gz"
     curl -sL -o "$TEMP_SOURCE" "$SOURCE_URL"
@@ -136,13 +136,13 @@ if [ -d "$HOME/code/homebrew-tap" ]; then
     cat > "$FORMULA_PATH" << EOF
 class DenoteTasks < Formula
   desc "Task management tool using Denote file naming convention"
-  homepage "https://github.com/pdxmph/atask"
+  homepage "https://github.com/mph-llm-experiments/atask"
   version "${VERSION#v}"
   license "MIT"
   
   # Use binary release for ARM64 Macs
   if OS.mac? && Hardware::CPU.arm?
-    url "https://github.com/pdxmph/atask/releases/download/${VERSION}/${ARCHIVE_NAME}"
+    url "https://github.com/mph-llm-experiments/atask/releases/download/${VERSION}/${ARCHIVE_NAME}"
     sha256 "${BINARY_SHA}"
   else
     # Fall back to building from source
@@ -213,7 +213,7 @@ echo "  brew tap pdxmph/homebrew-tap"
 echo "  brew install pdxmph/homebrew-tap/atask"
 echo ""
 echo "Or manually:"
-echo "  curl -L https://github.com/pdxmph/atask/releases/download/$VERSION/$ARCHIVE_NAME | tar xz"
+echo "  curl -L https://github.com/mph-llm-experiments/atask/releases/download/$VERSION/$ARCHIVE_NAME | tar xz"
 echo "  sudo mv atask /usr/local/bin/"
 echo ""
-echo "Or download directly from: https://github.com/pdxmph/atask/releases/tag/$VERSION"
+echo "Or download directly from: https://github.com/mph-llm-experiments/atask/releases/tag/$VERSION"

@@ -1,4 +1,4 @@
-module github.com/pdxmph/atask
+module github.com/mph-llm-experiments/atask
 
 go 1.21
 

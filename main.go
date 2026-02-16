@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pdxmph/atask/internal/cli"
-	"github.com/pdxmph/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/cli"
+	"github.com/mph-llm-experiments/atask/internal/config"
 )
 
 var version = "0.19.0"

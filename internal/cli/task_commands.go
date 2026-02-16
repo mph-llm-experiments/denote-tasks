@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/pdxmph/atask/internal/config"
-	"github.com/pdxmph/atask/internal/denote"
-	"github.com/pdxmph/atask/internal/query"
-	"github.com/pdxmph/atask/internal/task"
+	"github.com/mph-llm-experiments/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/query"
+	"github.com/mph-llm-experiments/atask/internal/task"
 )
 
 // TaskCommand creates the task command with all subcommands

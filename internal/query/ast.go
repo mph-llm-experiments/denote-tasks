@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pdxmph/atask/internal/config"
-	"github.com/pdxmph/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/config"
+	"github.com/mph-llm-experiments/atask/internal/denote"
 )
 
 // Node represents a node in the abstract syntax tree
