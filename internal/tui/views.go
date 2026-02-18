@@ -114,6 +114,9 @@ func (m Model) renderHeader() string {
 	if m.soonFilter {
 		filterInfo = append(filterInfo, fmt.Sprintf("Soon: %dd", m.config.SoonHorizon))
 	}
+	if m.todayFilter {
+		filterInfo = append(filterInfo, "Due today")
+	}
 	
 	// Sort info
 	sortInfo := fmt.Sprintf(SortFormatString, m.sortBy)
@@ -1006,6 +1009,9 @@ func (m Model) renderFilterMenu() string {
 	if m.soonFilter {
 		activeFilters = append(activeFilters, fmt.Sprintf("Soon: %d days", m.config.SoonHorizon))
 	}
+	if m.todayFilter {
+		activeFilters = append(activeFilters, "Due today")
+	}
 	
 	current := "\n\nActive filters:"
 	if len(activeFilters) == 0 {
@@ -1027,6 +1033,7 @@ Filter by:
   (s) State
   (l) Loose tasks (toggle) - no project
   (d) Due soon (toggle)
+  (t) Due today (toggle)
 
   (c) Clear all filters
 

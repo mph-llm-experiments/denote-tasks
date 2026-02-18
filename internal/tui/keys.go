@@ -1153,13 +1153,27 @@ func (m Model) handleFilterMenuKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.applyFilters()
 		m.sortFiles()
 		m.loadVisibleMetadata()
-		
+
+	case "t":
+		// Due today filter toggle
+		m.todayFilter = !m.todayFilter
+		m.mode = ModeNormal
+		if m.todayFilter {
+			m.statusMsg = "Showing tasks due today"
+		} else {
+			m.statusMsg = "Today filter disabled"
+		}
+		m.applyFilters()
+		m.sortFiles()
+		m.loadVisibleMetadata()
+
 	case "c":
 		// Clear all filters
 		m.areaFilter = ""
 		m.priorityFilter = ""
 		m.stateFilter = ""
 		m.soonFilter = false
+		m.todayFilter = false
 		m.looseFilter = false
 		m.mode = ModeNormal
 		m.statusMsg = "All filters cleared"

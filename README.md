@@ -154,6 +154,7 @@ atask project tasks 15  # Show tasks for project
 - `t` - Edit tags
 - `u` - Update task metadata
 - `x` - Delete task/project
+- `D` - Mark task as done (quick action)
 - `/` - Search (use `#tag` for tag search)
 
 **Priority:**
@@ -167,7 +168,7 @@ atask project tasks 15  # Show tasks for project
 - `P` - Toggle projects view
 - `T` - Toggle tasks view
 - `S` - Sort options menu
-- `f` - Filter menu (area/priority/state/loose/soon)
+- `f` - Filter menu (area/priority/state/loose/soon/today)
 
 **General:**
 

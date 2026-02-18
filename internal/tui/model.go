@@ -42,6 +42,7 @@ type Model struct {
 	priorityFilter string
 	stateFilter    string
 	soonFilter     bool
+	todayFilter    bool  // Filter to show only tasks due today
 	looseFilter    bool  // Filter to show only tasks with no project
 	projectFilter  bool  // Filter to show only projects
 	
@@ -322,6 +323,20 @@ func (m *Model) applyFilters() {
 					isDueSoon = denote.IsDueSoon(projectMeta.DueDate, m.config.SoonHorizon)
 				}
 				if !isDueSoon {
+					continue
+				}
+			}
+
+			// Today filter (tasks and projects due today)
+			if m.todayFilter {
+				today := time.Now().Format("2006-01-02")
+				isDueToday := false
+				if taskMeta != nil && taskMeta.DueDate == today {
+					isDueToday = true
+				} else if projectMeta != nil && projectMeta.DueDate == today {
+					isDueToday = true
+				}
+				if !isDueToday {
 					continue
 				}
 			}

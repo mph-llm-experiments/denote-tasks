@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-02-18
+
+### Added
+- **"D" hotkey for Done** - Quick mark-as-done from list view and task detail view, with recurrence support
+- **Due today filter** - Toggle with `t` in filter menu to show only tasks due today
+- **Emacs/readline keybindings** in all edit fields - ctrl+a/e (home/end), ctrl+b/f (back/forward), ctrl+h/d (delete), ctrl+k (kill to end), ctrl+u (kill to beginning), ctrl+w (delete word backward)
+
+### Fixed
+- **Project line column alignment** - Fixed spacing issue where ANSI color codes caused misaligned columns in project rows
+- **default_area config not honored** - TUI now applies `default_area` setting at startup
+
+## [0.22.0] - 2026-02-18
+
+### Changed
+- **project_id uses index_id** - Task `project_id` now stores sequential index_id instead of Denote timestamp, fixing ambiguity when projects share timestamps
+- Added `atask migrate project-id-to-index` command for one-time data migration
+
 ## [0.21.0] - 2026-02-18
 
 ### Added

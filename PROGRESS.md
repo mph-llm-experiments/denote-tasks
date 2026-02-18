@@ -7,6 +7,44 @@ Features that compile but haven't been tested must be marked as "IMPLEMENTED BUT
 
 ---
 
+## Session: 2026-02-18 (Continued) - UX Improvements & Project ID Migration
+
+### Summary
+
+Multiple improvements: switched project_id from Denote timestamp to index_id (with migration), added Done hotkey, emacs keybindings in edit fields, due today filter, fixed project line spacing, and honored default_area config at startup.
+
+### Features Implemented ✅
+
+**1. project_id Migration (v0.22.0)**
+- Switched all project_id references from Denote timestamp to sequential index_id
+- Added `atask migrate project-id-to-index` command with `--dry-run` support
+- Modified 10 files across CLI, TUI, and denote packages
+
+**2. Done Hotkey (v0.23.0)**
+- `D` marks task as done from list view and task detail view
+- Handles recurrence (creates next instance if recurring)
+
+**3. Emacs/Readline Keybindings (v0.23.0)**
+- ctrl+a/e (home/end), ctrl+b/f (back/forward), ctrl+h/d (delete char)
+- ctrl+k (kill to end), ctrl+u (kill to beginning), ctrl+w (delete word backward)
+- Applied to all 5 edit field handlers across keys.go, task_view_keys.go, project_view_keys.go
+
+**4. Due Today Filter (v0.24.0)**
+- Toggle with `t` in filter menu
+- Shows only tasks/projects due today
+- Shows in header bar and filter menu, clears with `c`
+
+**5. Bug Fixes (v0.23.0)**
+- Fixed project line column alignment (pad before color, not after)
+- Fixed default_area config not being applied at TUI startup
+
+### Releases
+- **v0.22.0** - project_id migration to index_id
+- **v0.23.0** - Done hotkey, emacs keybindings, project line fix, default_area fix
+- **v0.24.0** - Due today filter
+
+---
+
 ## Session: 2026-02-18 - Default State Filter & Loose Tasks Filter
 
 ### Summary
