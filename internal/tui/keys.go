@@ -536,6 +536,11 @@ func (m Model) handleTaskModeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		
+	case "R":
+		// Refresh list from disk with current filters
+		m.scanFiles()
+		m.statusMsg = "Refreshed"
+
 	case "r":
 		// Toggle reverse sort
 		m.reverseSort = !m.reverseSort

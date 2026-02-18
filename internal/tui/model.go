@@ -194,9 +194,30 @@ func (m *Model) loadVisibleMetadata() {
 	// We keep it to avoid breaking callers, but it does nothing
 }
 
+func (m *Model) hasAnyFilter() bool {
+	return m.areaFilter != "" || m.priorityFilter != "" || m.stateFilter != "" ||
+		m.soonFilter || m.todayFilter || m.looseFilter || m.searchQuery != "" || m.projectFilter
+}
+
 func (m *Model) applyFilters() {
 	filtered := make([]denote.File, 0, len(m.files))
-	
+
+	// Build set of paused/cancelled project IDs to hide their tasks
+	// (only when any filter is active)
+	pausedProjectIDs := make(map[string]bool)
+	if m.hasAnyFilter() {
+		for _, f := range m.files {
+			if f.IsProject() {
+				if proj, err := denote.ParseProjectFile(f.Path); err == nil {
+					if proj.ProjectMetadata.Status == denote.ProjectStatusPaused ||
+						proj.ProjectMetadata.Status == denote.ProjectStatusCancelled {
+						pausedProjectIDs[strconv.Itoa(proj.IndexID)] = true
+					}
+				}
+			}
+		}
+	}
+
 	for _, f := range m.files {
 		// Always in task mode - only show tasks and projects
 		if !f.IsTask() && !f.IsProject() {
@@ -253,6 +274,11 @@ func (m *Model) applyFilters() {
 			}
 		}
 			
+			// Hide tasks belonging to paused/cancelled projects (when any filter is active)
+			if taskMeta != nil && taskMeta.ProjectID != "" && pausedProjectIDs[taskMeta.ProjectID] {
+				continue
+			}
+
 			// Area filter
 			if m.areaFilter != "" {
 				if taskMeta != nil && !strings.EqualFold(taskMeta.Area, m.areaFilter) {
