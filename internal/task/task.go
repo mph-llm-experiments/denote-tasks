@@ -197,6 +197,101 @@ func FindProjectByDenoteID(dir string, denoteID string) (*denote.Project, error)
 	return nil, fmt.Errorf("project with Denote ID %s not found", denoteID)
 }
 
+// CloneTaskForRecurrence creates a new task based on an existing recurring task
+// with a new due date. It copies most fields but resets status to open and clears
+// start_date and today_date.
+func CloneTaskForRecurrence(dir string, original *denote.Task, newDueDate string) (*denote.Task, error) {
+	// Get ID counter
+	counter, err := denote.GetIDCounter(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ID counter: %w", err)
+	}
+
+	// Get next index ID
+	indexID, err := counter.NextIndexID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next index ID: %w", err)
+	}
+
+	// Generate new Denote ID
+	now := time.Now()
+	denoteID := now.Format("20060102T150405")
+
+	// Create slug from title
+	slug := titleToSlug(original.TaskMetadata.Title)
+
+	// Reuse the original's filename tags
+	tags := make([]string, len(original.File.Tags))
+	copy(tags, original.File.Tags)
+	if !contains(tags, "task") {
+		tags = append([]string{"task"}, tags...)
+	}
+
+	// Build filename
+	tagStr := ""
+	if len(tags) > 0 {
+		tagStr = "__" + strings.Join(tags, "_")
+	}
+	filename := fmt.Sprintf("%s--%s%s.md", denoteID, slug, tagStr)
+	filePath := filepath.Join(dir, filename)
+
+	// Build new metadata: copy fields from original, reset status
+	metadata := denote.TaskMetadata{
+		Title:     original.TaskMetadata.Title,
+		IndexID:   indexID,
+		Type:      denote.TypeTask,
+		Status:    denote.TaskStatusOpen,
+		Priority:  original.TaskMetadata.Priority,
+		DueDate:   newDueDate,
+		Estimate:  original.TaskMetadata.Estimate,
+		ProjectID: original.TaskMetadata.ProjectID,
+		Area:      original.TaskMetadata.Area,
+		Assignee:  original.TaskMetadata.Assignee,
+		Recur:     original.TaskMetadata.Recur,
+		Tags:      original.TaskMetadata.Tags,
+		// StartDate and TodayDate intentionally left empty
+	}
+
+	// Extract body content (everything after frontmatter)
+	body := extractBody(original.Content)
+
+	// Build content with frontmatter
+	var builder strings.Builder
+	builder.WriteString("---\n")
+
+	yamlData, err := yaml.Marshal(metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal metadata: %w", err)
+	}
+	builder.Write(yamlData)
+	builder.WriteString("---\n")
+
+	if body != "" {
+		builder.WriteString(body)
+	}
+
+	// Write file
+	if err := os.WriteFile(filePath, []byte(builder.String()), 0644); err != nil {
+		return nil, fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return denote.ParseTaskFile(filePath)
+}
+
+// extractBody returns the content after the YAML frontmatter
+func extractBody(content string) string {
+	// Find the closing --- of frontmatter
+	if !strings.HasPrefix(content, "---") {
+		return content
+	}
+	rest := content[3:]
+	idx := strings.Index(rest, "---")
+	if idx == -1 {
+		return ""
+	}
+	return rest[idx+3:]
+}
+
 // titleToSlug converts a title to a kebab-case slug
 func titleToSlug(title string) string {
 	// Convert to lowercase

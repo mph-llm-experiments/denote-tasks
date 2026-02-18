@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mph-llm-experiments/atask/internal/denote"
@@ -154,92 +153,23 @@ func (m Model) renderFileList() string {
 		visibleHeight = DefaultVisibleHeight // Default
 	}
 	
-	start := 0
-	if m.cursor >= visibleHeight {
+	start := m.scrollOffset
+	// Ensure cursor is visible within viewport
+	if m.cursor < start {
+		start = m.cursor
+	}
+	if m.cursor >= start+visibleHeight {
 		start = m.cursor - visibleHeight + 1
 	}
-	
 	end := start + visibleHeight
 	if end > len(m.filtered) {
 		end = len(m.filtered)
 	}
 	
-	
+
 	var lines []string
-	todayStr := time.Now().Format("2006-01-02")
-
-	// Check if we should show "tagged for today" divider
-	showTodayDividerAt := -1
-	for i := 0; i < len(m.filtered); i++ {
-		file := m.filtered[i]
-		if file.IsTask() {
-			if task, err := denote.ParseTaskFile(file.Path); err == nil {
-				// Show divider after last today task
-				if !task.IsTaggedForToday() && i > 0 {
-					// Check if previous task was tagged for today
-					if prevTask, err := denote.ParseTaskFile(m.filtered[i-1].Path); err == nil {
-						if prevTask.IsTaggedForToday() {
-							showTodayDividerAt = i
-							break
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Check if we should show "due today" divider in the visible range
-	showDividerAt := -1
-	if m.sortBy == "due" && !m.reverseSort {
-		// Find where to show the divider in the full list
-		for i := 0; i < len(m.filtered); i++ {
-			file := m.filtered[i]
-			if file.IsTask() {
-				if task, err := denote.ParseTaskFile(file.Path); err == nil {
-					// Show divider before first task that is:
-					// 1. Due after today, OR
-					// 2. Has no due date (and we've seen tasks with due dates)
-					if (task.TaskMetadata.DueDate != "" && task.TaskMetadata.DueDate > todayStr) ||
-					   (task.TaskMetadata.DueDate == "" && i > 0) {
-						showDividerAt = i
-						break
-					}
-				}
-			} else if file.IsProject() {
-				// Skip projects - don't show divider for them
-				continue
-			}
-		}
-	}
-	
 	for i := start; i < end; i++ {
-		// Show "tagged for today" divider if this is the position
-		if i == showTodayDividerAt {
-			label := "★ tagged for today"
-			lineWidth := m.width - len(label) - 2 // Leave some margin
-			if lineWidth < 10 {
-				lineWidth = 10 // Minimum width
-			}
-			divider := strings.Repeat("─", lineWidth) + label
-			// Use a subtle color for the divider
-			todayDividerStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("214"))
-			lines = append(lines, todayDividerStyle.Render(divider))
-		}
-
-		// Show "due today" divider if this is the position
-		if i == showDividerAt {
-			// Create a responsive divider that adjusts to terminal width
-			label := "→ due today"
-			lineWidth := m.width - len(label) - 2 // Leave some margin
-			if lineWidth < 10 {
-				lineWidth = 10 // Minimum width
-			}
-			divider := strings.Repeat("─", lineWidth) + label
-			lines = append(lines, helpStyle.Render(divider))
-		}
-
-		line := m.renderFileLine(i)
-		lines = append(lines, line)
+		lines = append(lines, m.renderFileLine(i))
 	}
 	
 	return strings.Join(lines, "\n")
@@ -352,7 +282,12 @@ func (m Model) renderTaskLine(index int, file denote.File, task *denote.Task) st
 	if hasNotes {
 		title = "≡ " + title
 	}
-	
+
+	// Add recurrence indicator
+	if task.TaskMetadata.Recur != "" {
+		title = "↻ " + title
+	}
+
 	area := ""
 	// Only show area if we're not filtering by area
 	if task.TaskMetadata.Area != "" && m.areaFilter == "" {

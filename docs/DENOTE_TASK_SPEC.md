@@ -1,10 +1,14 @@
 # Denote Task Format Specification
 
-Version: 2.0.1  
-Date: 2025-01-14
+Version: 2.1.0
+Date: 2026-02-17
 
 ## Version History
 
+- 2.1.0 (2026-02-17): Added task recurrence support
+  - Added `recur` field to task frontmatter
+  - Supported patterns: daily, weekly, monthly, yearly, every Nd/Nw/Nm/Ny, every mon,wed,fri
+  - Completing a recurring task automatically creates the next occurrence
 - 2.0.1 (2025-01-14): Unified sequential ID field
   - Changed `task_id` and `project_id` to universal `index_id` field
   - Counter file now uses `next_index_id` instead of separate counters
@@ -80,6 +84,7 @@ estimate: 5              # Time estimate (Fibonacci: 1,2,3,5,8,13)
 project_id: 20250627T191225  # Denote ID of associated project
 area: work               # Area of life (work, personal, home, etc.)
 assignee: john-doe       # Person responsible
+recur: weekly            # Recurrence pattern (see Recurrence Patterns)
 tags: [bike, maintenance]  # Additional tags beyond filename tags
 ---
 ```
@@ -175,6 +180,18 @@ tags: [travel, conference]  # Additional tags beyond filename tags
 - Type: String
 - Required: No
 - Description: Person responsible for the task
+
+#### recur
+- Type: String
+- Required: No
+- Description: Recurrence pattern for repeating tasks
+- Requires: `due_date` must be set when `recur` is set
+- Behavior: When a recurring task is marked done, a new task is automatically created with the next due date calculated from the original due date (fixed schedule)
+- Values:
+  - Simple: `daily`, `weekly`, `monthly`, `yearly`
+  - Interval: `every <N>d`, `every <N>w`, `every <N>m`, `every <N>y` (e.g., `every 2w` for biweekly)
+  - Day-of-week: `every monday`, `every mon,wed,fri`
+- Note: If the computed next date would be in the past (late completion), it advances until the next future occurrence
 
 ## Content Structure
 

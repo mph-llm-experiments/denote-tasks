@@ -110,6 +110,7 @@ type TaskMetadata struct {
 	ProjectID string   `yaml:"project_id,omitempty" json:"project_id,omitempty"` // Denote ID of project (v2.0.0)
 	Area      string   `yaml:"area,omitempty" json:"area,omitempty"`    // Life context
 	Assignee  string   `yaml:"assignee,omitempty" json:"assignee,omitempty"` // Person responsible
+	Recur     string   `yaml:"recur,omitempty" json:"recur,omitempty"`      // Recurrence pattern (e.g., daily, weekly, every 2w)
 	Tags      []string `yaml:"tags,omitempty" json:"tags,omitempty"`    // Additional tags beyond filename
 }
 

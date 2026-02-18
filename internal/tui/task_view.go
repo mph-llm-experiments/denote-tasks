@@ -235,7 +235,12 @@ func (m Model) renderTaskDetails() string {
 	if meta.Assignee != "" {
 		lines = append(lines, m.renderFieldWithHotkey("Assignee", meta.Assignee, "not set", ""))
 	}
-	
+
+	// Recurrence
+	if meta.Recur != "" {
+		lines = append(lines, m.renderFieldWithHotkey("Recurrence", "↻ "+meta.Recur, "not set", ""))
+	}
+
 	// File info
 	lines = append(lines, "")
 	lines = append(lines, m.renderFieldWithHotkey("File", m.viewingFile.Path, "", ""))

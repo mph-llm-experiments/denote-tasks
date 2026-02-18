@@ -351,22 +351,25 @@ func (m Model) handleTaskModeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			newCursor := nav.HandleKey(msg.String())
 			if newCursor != m.cursor {
 				m.cursor = newCursor
+				m.adjustScrollOffset()
 				m.loadVisibleMetadata()
 			}
 		}
-		
+
 	case "g":
 		if m.lastKey == "g" {
 			m.cursor = 0
+			m.scrollOffset = 0
 			m.lastKey = ""
 			m.loadVisibleMetadata()
 		} else {
 			m.lastKey = "g"
 		}
-		
+
 	case "G":
 		if len(m.filtered) > 0 {
 			m.cursor = len(m.filtered) - 1
+			m.adjustScrollOffset()
 			m.loadVisibleMetadata()
 		}
 		
@@ -923,15 +926,26 @@ func (m Model) handleStateMenuKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Done (tasks only)
 		if !isProject {
 			var err error
+			var taskPath string
 			if returnMode == ModeProjectView {
+				if m.projectTasksCursor < len(m.projectTasks) {
+					taskPath = m.projectTasks[m.projectTasksCursor].File.Path
+				}
 				err = m.updateProjectTaskStatus(denote.TaskStatusDone)
 			} else {
+				if m.cursor < len(m.filtered) {
+					taskPath = m.filtered[m.cursor].Path
+				}
 				err = m.updateCurrentTaskStatus(denote.TaskStatusDone)
 			}
 			if err != nil {
 				m.statusMsg = fmt.Sprintf(ErrorFormat, err)
 			} else {
-				m.statusMsg = "Task status changed to done"
+				recurMsg := m.handleTaskRecurrence(taskPath)
+				if recurMsg != "" {
+					m.scanFiles()
+				}
+				m.statusMsg = "Task status changed to done" + recurMsg
 			}
 			m.mode = returnMode
 		}

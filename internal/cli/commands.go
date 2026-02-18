@@ -29,9 +29,12 @@ func (c *Command) Execute(args []string) error {
 		}
 	}
 
-	// Parse flags
+	// Parse flags - reorder args so flags come before positional args,
+	// since Go's flag package stops parsing at the first non-flag argument.
+	// This allows "atask new 'title' --due 2026-02-17" to work.
 	if c.Flags != nil {
-		if err := c.Flags.Parse(args); err != nil {
+		reordered := reorderFlagsFirst(args, c.Flags)
+		if err := c.Flags.Parse(reordered); err != nil {
 			return err
 		}
 		args = c.Flags.Args()
@@ -72,6 +75,59 @@ func (c *Command) PrintUsage() {
 		fmt.Fprintf(os.Stderr, "Flags:\n")
 		c.Flags.PrintDefaults()
 	}
+}
+
+// reorderFlagsFirst moves flag arguments before positional arguments so that
+// Go's flag.Parse (which stops at the first non-flag arg) can find them all.
+// For example: ["title", "--due", "2026-02-17"] -> ["--due", "2026-02-17", "title"]
+func reorderFlagsFirst(args []string, fs *flag.FlagSet) []string {
+	var flags, positional []string
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+		if arg == "--" {
+			// Everything after -- is positional
+			positional = append(positional, args[i+1:]...)
+			break
+		}
+		if strings.HasPrefix(arg, "-") {
+			// It's a flag. Check if the flag takes a value.
+			flags = append(flags, arg)
+			name := strings.TrimLeft(arg, "-")
+			// Handle --flag=value
+			if eqIdx := strings.Index(name, "="); eqIdx >= 0 {
+				i++
+				continue
+			}
+			// Look up the flag to see if it's boolean (no value) or takes a value
+			f := fs.Lookup(name)
+			if f != nil && isBoolFlag(f) {
+				i++
+				continue
+			}
+			// Non-bool flag: next arg is the value
+			if i+1 < len(args) {
+				i++
+				flags = append(flags, args[i])
+			}
+		} else {
+			positional = append(positional, arg)
+		}
+		i++
+	}
+	return append(flags, positional...)
+}
+
+// isBoolFlag checks if a flag is a boolean flag (doesn't take a value argument)
+func isBoolFlag(f *flag.Flag) bool {
+	// Check if the flag implements the boolFlag interface
+	type boolFlagger interface {
+		IsBoolFlag() bool
+	}
+	if bf, ok := f.Value.(boolFlagger); ok {
+		return bf.IsBoolFlag()
+	}
+	return false
 }
 
 // Global flags

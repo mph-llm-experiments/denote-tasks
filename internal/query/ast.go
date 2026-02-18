@@ -119,6 +119,17 @@ func (n *ComparisonNode) Evaluate(task *denote.Task, cfg *config.Config) bool {
 		}
 		return false
 
+	case "recur":
+		if value == "empty" {
+			isEmpty := task.TaskMetadata.Recur == ""
+			return n.Operator == ":" && isEmpty
+		}
+		if value == "set" {
+			isSet := task.TaskMetadata.Recur != ""
+			return n.Operator == ":" && isSet
+		}
+		return compareString(strings.ToLower(task.TaskMetadata.Recur), n.Operator, value)
+
 	case "content", "body", "text":
 		// Search in file content (case-insensitive substring match)
 		if n.Operator == ":" || n.Operator == "=" {

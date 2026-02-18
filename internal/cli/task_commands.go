@@ -8,11 +8,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/mph-llm-experiments/atask/internal/config"
 	"github.com/mph-llm-experiments/atask/internal/denote"
 	"github.com/mph-llm-experiments/atask/internal/query"
+	"github.com/mph-llm-experiments/atask/internal/recurrence"
 	"github.com/mph-llm-experiments/atask/internal/task"
 )
 
@@ -48,6 +50,7 @@ func taskNewCommand(cfg *config.Config) *Command {
 		project  string
 		estimate int
 		tags     string
+		recur    string
 	)
 
 	cmd := &Command{
@@ -64,6 +67,7 @@ func taskNewCommand(cfg *config.Config) *Command {
 	cmd.Flags.StringVar(&project, "project", "", "Project name or ID")
 	cmd.Flags.IntVar(&estimate, "estimate", 0, "Time estimate")
 	cmd.Flags.StringVar(&tags, "tags", "", "Comma-separated tags")
+	cmd.Flags.StringVar(&recur, "recur", "", "Recurrence pattern (daily, weekly, monthly, yearly, every Nd/Nw/Nm/Ny, every mon,wed,fri)")
 
 	cmd.Run = func(c *Command, args []string) error {
 		if len(args) == 0 {
@@ -78,6 +82,19 @@ func taskNewCommand(cfg *config.Config) *Command {
 			tagList = strings.Split(tags, ",")
 			for i := range tagList {
 				tagList[i] = strings.TrimSpace(tagList[i])
+			}
+		}
+
+		// Validate recurrence pattern if provided
+		var recurPattern string
+		if recur != "" {
+			if due == "" {
+				return fmt.Errorf("--due is required when --recur is set")
+			}
+			var err error
+			recurPattern, err = recurrence.ParsePattern(recur)
+			if err != nil {
+				return fmt.Errorf("invalid recurrence pattern: %v", err)
 			}
 		}
 
@@ -98,7 +115,7 @@ func taskNewCommand(cfg *config.Config) *Command {
 		}
 
 		// Update metadata if provided
-		if priority != "" || dueDate != "" || project != "" || estimate > 0 {
+		if priority != "" || dueDate != "" || project != "" || estimate > 0 || recurPattern != "" {
 			// Read the task
 			t, err := denote.ParseTaskFile(taskFile.Path)
 			if err != nil {
@@ -118,6 +135,9 @@ func taskNewCommand(cfg *config.Config) *Command {
 			}
 			if estimate > 0 {
 				t.TaskMetadata.Estimate = estimate
+			}
+			if recurPattern != "" {
+				t.TaskMetadata.Recur = recurPattern
 			}
 
 			// Write back
@@ -362,6 +382,9 @@ func taskListCommand(cfg *config.Config) *Command {
 			if title == "" {
 				title = t.File.Title
 			}
+			if t.TaskMetadata.Recur != "" {
+				title = "↻ " + title
+			}
 			if len(title) > 50 {
 				title = title[:47] + "..."
 			}
@@ -533,6 +556,7 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 		project  string
 		estimate int
 		status   string
+		recur    string
 	)
 
 	cmd := &Command{
@@ -549,10 +573,26 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 	cmd.Flags.StringVar(&project, "project", "", "Set project")
 	cmd.Flags.IntVar(&estimate, "estimate", -1, "Set time estimate")
 	cmd.Flags.StringVar(&status, "status", "", "Set status (open, done, paused, delegated, dropped)")
+	cmd.Flags.StringVar(&recur, "recur", "", "Set recurrence (use 'none' to clear)")
 
 	cmd.Run = func(c *Command, args []string) error {
 		if len(args) == 0 {
 			return fmt.Errorf("task IDs required")
+		}
+
+		// Validate recurrence pattern if provided
+		var recurPattern string
+		var clearRecur bool
+		if recur != "" {
+			if strings.ToLower(recur) == "none" {
+				clearRecur = true
+			} else {
+				var err error
+				recurPattern, err = recurrence.ParsePattern(recur)
+				if err != nil {
+					return fmt.Errorf("invalid recurrence pattern: %v", err)
+				}
+			}
 		}
 
 		// Parse task IDs
@@ -619,6 +659,13 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 			}
 			if status != "" {
 				t.TaskMetadata.Status = status
+				changed = true
+			}
+			if clearRecur {
+				t.TaskMetadata.Recur = ""
+				changed = true
+			} else if recurPattern != "" {
+				t.TaskMetadata.Recur = recurPattern
 				changed = true
 			}
 
@@ -699,6 +746,11 @@ func taskDoneCommand(cfg *config.Config) *Command {
 			updated++
 			if !globalFlags.Quiet {
 				fmt.Printf("✓ Task ID %d marked as done: %s\n", id, t.TaskMetadata.Title)
+			}
+
+			// Handle recurrence
+			if err := handleRecurrence(cfg, t); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to create recurring task for ID %d: %v\n", id, err)
 			}
 		}
 
@@ -938,6 +990,9 @@ func taskQueryCommand(cfg *config.Config) *Command {
 
 			// Title (truncate if too long)
 			title := t.TaskMetadata.Title
+			if t.TaskMetadata.Recur != "" {
+				title = "↻ " + title
+			}
 			if len(title) > 50 {
 				title = title[:47] + "..."
 			}
@@ -989,6 +1044,7 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 		project     string
 		estimate    int
 		status      string
+		recur       string
 		preview     bool
 	)
 
@@ -1006,6 +1062,7 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 	cmd.Flags.StringVar(&project, "project", "", "Set project")
 	cmd.Flags.IntVar(&estimate, "estimate", -1, "Set time estimate")
 	cmd.Flags.StringVar(&status, "status", "", "Set status (open, done, paused, delegated, dropped)")
+	cmd.Flags.StringVar(&recur, "recur", "", "Set recurrence (use 'none' to clear)")
 	cmd.Flags.BoolVar(&preview, "preview", false, "Preview changes without applying them")
 
 	cmd.Run = func(c *Command, args []string) error {
@@ -1014,8 +1071,8 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 		}
 
 		// Check that at least one field to update is specified
-		if priority == "" && due == "" && area == "" && project == "" && estimate == -1 && status == "" {
-			return fmt.Errorf("at least one field to update must be specified (--priority, --due, --area, --project, --estimate, or --status)")
+		if priority == "" && due == "" && area == "" && project == "" && estimate == -1 && status == "" && recur == "" {
+			return fmt.Errorf("at least one field to update must be specified (--priority, --due, --area, --project, --estimate, --status, or --recur)")
 		}
 
 		// Parse the where clause
@@ -1060,6 +1117,21 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 			}
 		}
 
+		// Validate recurrence pattern if provided
+		var recurPattern string
+		var clearRecur bool
+		if recur != "" {
+			if strings.ToLower(recur) == "none" {
+				clearRecur = true
+			} else {
+				var err error
+				recurPattern, err = recurrence.ParsePattern(recur)
+				if err != nil {
+					return fmt.Errorf("invalid recurrence pattern: %v", err)
+				}
+			}
+		}
+
 		// Show what changes will be made
 		changes := []string{}
 		if priority != "" {
@@ -1079,6 +1151,11 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 		}
 		if status != "" {
 			changes = append(changes, fmt.Sprintf("status → %s", status))
+		}
+		if clearRecur {
+			changes = append(changes, "recur → (cleared)")
+		} else if recurPattern != "" {
+			changes = append(changes, fmt.Sprintf("recur → %s", recurPattern))
 		}
 
 		fmt.Printf("Changes to apply:\n")
@@ -1121,6 +1198,13 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 				t.TaskMetadata.Status = status
 				changed = true
 			}
+			if clearRecur {
+				t.TaskMetadata.Recur = ""
+				changed = true
+			} else if recurPattern != "" {
+				t.TaskMetadata.Recur = recurPattern
+				changed = true
+			}
 
 			if changed {
 				if err := task.UpdateTaskFile(t.File.Path, t.TaskMetadata); err != nil {
@@ -1128,6 +1212,13 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 					continue
 				}
 				updated++
+
+				// Handle recurrence when setting status to done
+				if status == denote.TaskStatusDone {
+					if err := handleRecurrence(cfg, t); err != nil {
+						fmt.Fprintf(os.Stderr, "Warning: failed to create recurring task for ID %d: %v\n", t.TaskMetadata.IndexID, err)
+					}
+				}
 			}
 		}
 
@@ -1136,4 +1227,38 @@ func taskBatchUpdateCommand(cfg *config.Config) *Command {
 	}
 
 	return cmd
+}
+
+// handleRecurrence checks if a completed task has a recurrence pattern and creates the next instance.
+func handleRecurrence(cfg *config.Config, t *denote.Task) error {
+	if t.TaskMetadata.Recur == "" || t.TaskMetadata.DueDate == "" {
+		return nil
+	}
+
+	// Parse the current due date
+	currentDue, err := time.ParseInLocation("2006-01-02", t.TaskMetadata.DueDate, time.Now().Location())
+	if err != nil {
+		return fmt.Errorf("failed to parse due date %q: %w", t.TaskMetadata.DueDate, err)
+	}
+
+	// Compute next due date
+	nextDue, err := recurrence.NextDueDate(t.TaskMetadata.Recur, currentDue)
+	if err != nil {
+		return fmt.Errorf("failed to compute next due date: %w", err)
+	}
+
+	newDueStr := nextDue.Format("2006-01-02")
+
+	// Clone the task
+	newTask, err := task.CloneTaskForRecurrence(cfg.NotesDirectory, t, newDueStr)
+	if err != nil {
+		return fmt.Errorf("failed to clone task: %w", err)
+	}
+
+	if !globalFlags.Quiet {
+		fmt.Printf("↻ Created recurring task ID %d: %s (due %s)\n",
+			newTask.TaskMetadata.IndexID, newTask.TaskMetadata.Title, newDueStr)
+	}
+
+	return nil
 }

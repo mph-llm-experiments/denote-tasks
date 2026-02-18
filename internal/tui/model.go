@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mph-llm-experiments/atask/internal/config"
 	"github.com/mph-llm-experiments/atask/internal/denote"
+	"github.com/mph-llm-experiments/atask/internal/recurrence"
 	"github.com/mph-llm-experiments/atask/internal/task"
 )
 
@@ -27,11 +28,12 @@ type Model struct {
 	cursor     int
 	
 	// UI State
-	width      int
-	height     int
-	mode       Mode
-	sortBy     string
-	reverseSort bool
+	width        int
+	height       int
+	scrollOffset int
+	mode         Mode
+	sortBy       string
+	reverseSort  bool
 	
 	// Filters
 	searchQuery    string
@@ -1241,8 +1243,48 @@ func (m *Model) updateCurrentTaskStatus(newStatus string) error {
 	}
 	
 	// No cache to update - we read fresh from disk
-	
+
 	return nil
+}
+
+// adjustScrollOffset ensures the cursor is visible within the current viewport.
+func (m *Model) adjustScrollOffset() {
+	visibleHeight := m.height - HeaderFooterHeight
+	if visibleHeight < 1 {
+		visibleHeight = DefaultVisibleHeight
+	}
+	if m.cursor < m.scrollOffset {
+		m.scrollOffset = m.cursor
+	}
+	if m.cursor >= m.scrollOffset+visibleHeight {
+		m.scrollOffset = m.cursor - visibleHeight + 1
+	}
+}
+
+// handleTaskRecurrence checks if a task has a recurrence pattern and creates the next instance.
+// Returns a status message about the new task, or empty string if not recurring.
+func (m *Model) handleTaskRecurrence(filePath string) string {
+	t, err := denote.ParseTaskFile(filePath)
+	if err != nil || t.TaskMetadata.Recur == "" || t.TaskMetadata.DueDate == "" {
+		return ""
+	}
+
+	currentDue, err := time.ParseInLocation("2006-01-02", t.TaskMetadata.DueDate, time.Now().Location())
+	if err != nil {
+		return ""
+	}
+
+	nextDue, err := recurrence.NextDueDate(t.TaskMetadata.Recur, currentDue)
+	if err != nil {
+		return ""
+	}
+
+	newTask, err := task.CloneTaskForRecurrence(m.config.NotesDirectory, t, nextDue.Format("2006-01-02"))
+	if err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf(" | ↻ Created next: ID %d (due %s)", newTask.TaskMetadata.IndexID, nextDue.Format("2006-01-02"))
 }
 
 // updateCurrentProjectStatus updates the status of the currently selected project
