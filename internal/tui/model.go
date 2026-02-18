@@ -154,6 +154,7 @@ func NewModel(cfg *config.Config) (*Model, error) {
 		sortBy:          sortBy,
 		reverseSort:     reverseSort,
 		stateFilter:     cfg.Tasks.DefaultStateFilter,
+		areaFilter:      cfg.DefaultArea,
 		fieldRenderer:   NewFieldRenderer(),
 	}
 

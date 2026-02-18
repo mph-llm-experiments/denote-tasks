@@ -505,25 +505,22 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 		}
 	}
 	
-	// Apply cyan to components BEFORE padding if active
-	var statusDisplay, titleFormatted, tagsFormatted, areaFormatted string
+	// Pad FIRST (plain text), then apply color
+	// fmt.Sprintf counts ANSI escape code bytes as characters, so padding
+	// must happen before color is applied
+	titlePadded := fmt.Sprintf("%-*s", ColumnWidthTitle, titleTruncated)
+	tagsPadded := fmt.Sprintf("%-*s", ColumnWidthTags, truncate(tagStr, ColumnWidthTags))
+	areaPadded := fmt.Sprintf("%-*s", ColumnWidthArea, truncate(area, ColumnWidthArea))
 
+	var statusDisplay string
 	if isActive {
 		statusDisplay = cyanStyle.Render(status)
-		titleFormatted = cyanStyle.Render(titleTruncated)
-		tagsFormatted = cyanStyle.Render(truncate(tagStr, ColumnWidthTags))
-		areaFormatted = cyanStyle.Render(truncate(area, ColumnWidthArea))
+		titlePadded = cyanStyle.Render(titlePadded)
+		tagsPadded = cyanStyle.Render(tagsPadded)
+		areaPadded = cyanStyle.Render(areaPadded)
 	} else {
 		statusDisplay = status
-		titleFormatted = titleTruncated
-		tagsFormatted = truncate(tagStr, ColumnWidthTags)
-		areaFormatted = truncate(area, ColumnWidthArea)
 	}
-
-	// NOW pad after coloring
-	titlePadded := fmt.Sprintf("%-*s", ColumnWidthTitle, titleFormatted)
-	tagsPadded := fmt.Sprintf("%-*s", ColumnWidthTags, tagsFormatted)
-	areaPadded := fmt.Sprintf("%-*s", ColumnWidthArea, areaFormatted)
 
 	// Build line matching task format exactly:
 	// selector + todayIndicator + " " + status + " " + priority + " " + estimate + " " + due + "  " + titlePadded + " " + tagsPadded + " " + areaPadded + " " + projectName

@@ -86,33 +86,56 @@ func (m Model) handleProjectViewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.editBuffer = ""
 			m.editCursor = 0
 			
-		case "backspace":
+		case "backspace", "ctrl+h":
 			if m.editCursor > 0 && len(m.editBuffer) > 0 {
 				m.editBuffer = m.editBuffer[:m.editCursor-1] + m.editBuffer[m.editCursor:]
 				m.editCursor--
 			}
-			
-		case "delete":
+
+		case "delete", "ctrl+d":
 			if m.editCursor < len(m.editBuffer) {
 				m.editBuffer = m.editBuffer[:m.editCursor] + m.editBuffer[m.editCursor+1:]
 			}
-			
-		case "left":
+
+		case "left", "ctrl+b":
 			if m.editCursor > 0 {
 				m.editCursor--
 			}
-			
-		case "right":
+
+		case "right", "ctrl+f":
 			if m.editCursor < len(m.editBuffer) {
 				m.editCursor++
 			}
-			
-		case "home":
+
+		case "home", "ctrl+a":
 			m.editCursor = 0
-			
-		case "end":
+
+		case "end", "ctrl+e":
 			m.editCursor = len(m.editBuffer)
-			
+
+		case "ctrl+k":
+			// Kill to end of line
+			m.editBuffer = m.editBuffer[:m.editCursor]
+
+		case "ctrl+u":
+			// Kill to beginning of line
+			m.editBuffer = m.editBuffer[m.editCursor:]
+			m.editCursor = 0
+
+		case "ctrl+w":
+			// Delete word backward
+			if m.editCursor > 0 {
+				i := m.editCursor - 1
+				for i > 0 && m.editBuffer[i-1] == ' ' {
+					i--
+				}
+				for i > 0 && m.editBuffer[i-1] != ' ' {
+					i--
+				}
+				m.editBuffer = m.editBuffer[:i] + m.editBuffer[m.editCursor:]
+				m.editCursor = i
+			}
+
 		default:
 			if len(msg.String()) == 1 {
 				m.editBuffer = m.editBuffer[:m.editCursor] + msg.String() + m.editBuffer[m.editCursor:]

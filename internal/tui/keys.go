@@ -510,6 +510,23 @@ func (m Model) handleTaskModeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Sort mode (uppercase S since lowercase is now for state)
 		m.mode = ModeSort
 		
+	case "D":
+		// Mark task as done (quick action)
+		if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
+			file := m.filtered[m.cursor]
+			if file.IsTask() {
+				if err := m.updateCurrentTaskStatus(denote.TaskStatusDone); err != nil {
+					m.statusMsg = fmt.Sprintf(ErrorFormat, err)
+				} else {
+					recurMsg := m.handleTaskRecurrence(file.Path)
+					if recurMsg != "" {
+						m.scanFiles()
+					}
+					m.statusMsg = "Task marked as done" + recurMsg
+				}
+			}
+		}
+
 	case "x", "delete":
 		// Delete task confirmation
 		if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
@@ -1489,43 +1506,60 @@ func (m Model) handleDateEditKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.editBuffer = ""
 		m.editCursor = 0
 		
-	case "backspace":
+	case "backspace", "ctrl+h":
 		if m.editCursor > 0 && len(m.editBuffer) > 0 {
-			// Remove character before cursor
 			m.editBuffer = m.editBuffer[:m.editCursor-1] + m.editBuffer[m.editCursor:]
 			m.editCursor--
 		}
-		
-	case "delete":
+
+	case "delete", "ctrl+d":
 		if m.editCursor < len(m.editBuffer) {
-			// Remove character at cursor
 			m.editBuffer = m.editBuffer[:m.editCursor] + m.editBuffer[m.editCursor+1:]
 		}
-		
+
 	case "left", "ctrl+b":
 		if m.editCursor > 0 {
 			m.editCursor--
 		}
-		
+
 	case "right", "ctrl+f":
 		if m.editCursor < len(m.editBuffer) {
 			m.editCursor++
 		}
-		
+
 	case "home", "ctrl+a":
 		m.editCursor = 0
-		
+
 	case "end", "ctrl+e":
 		m.editCursor = len(m.editBuffer)
-		
+
+	case "ctrl+k":
+		m.editBuffer = m.editBuffer[:m.editCursor]
+
+	case "ctrl+u":
+		m.editBuffer = m.editBuffer[m.editCursor:]
+		m.editCursor = 0
+
+	case "ctrl+w":
+		if m.editCursor > 0 {
+			i := m.editCursor - 1
+			for i > 0 && m.editBuffer[i-1] == ' ' {
+				i--
+			}
+			for i > 0 && m.editBuffer[i-1] != ' ' {
+				i--
+			}
+			m.editBuffer = m.editBuffer[:i] + m.editBuffer[m.editCursor:]
+			m.editCursor = i
+		}
+
 	default:
 		if len(msg.String()) == 1 {
-			// Insert character at cursor position
 			m.editBuffer = m.editBuffer[:m.editCursor] + msg.String() + m.editBuffer[m.editCursor:]
 			m.editCursor++
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -1636,43 +1670,60 @@ func (m Model) handleTagsEditKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.editBuffer = ""
 		m.editCursor = 0
 		
-	case "backspace":
+	case "backspace", "ctrl+h":
 		if m.editCursor > 0 && len(m.editBuffer) > 0 {
-			// Remove character before cursor
 			m.editBuffer = m.editBuffer[:m.editCursor-1] + m.editBuffer[m.editCursor:]
 			m.editCursor--
 		}
-		
-	case "delete":
+
+	case "delete", "ctrl+d":
 		if m.editCursor < len(m.editBuffer) {
-			// Remove character at cursor
 			m.editBuffer = m.editBuffer[:m.editCursor] + m.editBuffer[m.editCursor+1:]
 		}
-		
+
 	case "left", "ctrl+b":
 		if m.editCursor > 0 {
 			m.editCursor--
 		}
-		
+
 	case "right", "ctrl+f":
 		if m.editCursor < len(m.editBuffer) {
 			m.editCursor++
 		}
-		
+
 	case "home", "ctrl+a":
 		m.editCursor = 0
-		
+
 	case "end", "ctrl+e":
 		m.editCursor = len(m.editBuffer)
-		
+
+	case "ctrl+k":
+		m.editBuffer = m.editBuffer[:m.editCursor]
+
+	case "ctrl+u":
+		m.editBuffer = m.editBuffer[m.editCursor:]
+		m.editCursor = 0
+
+	case "ctrl+w":
+		if m.editCursor > 0 {
+			i := m.editCursor - 1
+			for i > 0 && m.editBuffer[i-1] == ' ' {
+				i--
+			}
+			for i > 0 && m.editBuffer[i-1] != ' ' {
+				i--
+			}
+			m.editBuffer = m.editBuffer[:i] + m.editBuffer[m.editCursor:]
+			m.editCursor = i
+		}
+
 	default:
 		if len(msg.String()) == 1 {
-			// Insert character at cursor position
 			m.editBuffer = m.editBuffer[:m.editCursor] + msg.String() + m.editBuffer[m.editCursor:]
 			m.editCursor++
 		}
 	}
-	
+
 	return m, nil
 }
 
@@ -1756,36 +1807,47 @@ func (m Model) handleEstimateEditKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.editBuffer = ""
 		m.editCursor = 0
 		
-	case "backspace":
+	case "backspace", "ctrl+h":
 		if m.editCursor > 0 {
 			m.editBuffer = m.editBuffer[:m.editCursor-1] + m.editBuffer[m.editCursor:]
 			m.editCursor--
 		}
-		
-	case "left":
+
+	case "delete", "ctrl+d":
+		if m.editCursor < len(m.editBuffer) {
+			m.editBuffer = m.editBuffer[:m.editCursor] + m.editBuffer[m.editCursor+1:]
+		}
+
+	case "left", "ctrl+b":
 		if m.editCursor > 0 {
 			m.editCursor--
 		}
-		
-	case "right":
+
+	case "right", "ctrl+f":
 		if m.editCursor < len(m.editBuffer) {
 			m.editCursor++
 		}
-		
+
 	case "home", "ctrl+a":
 		m.editCursor = 0
-		
+
 	case "end", "ctrl+e":
 		m.editCursor = len(m.editBuffer)
-		
+
+	case "ctrl+k":
+		m.editBuffer = m.editBuffer[:m.editCursor]
+
+	case "ctrl+u":
+		m.editBuffer = m.editBuffer[m.editCursor:]
+		m.editCursor = 0
+
 	default:
 		// Only allow numeric input
 		if len(msg.String()) == 1 && msg.String() >= "0" && msg.String() <= "9" {
-			// Insert character at cursor position
 			m.editBuffer = m.editBuffer[:m.editCursor] + msg.String() + m.editBuffer[m.editCursor:]
 			m.editCursor++
 		}
 	}
-	
+
 	return m, nil
 }
