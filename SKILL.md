@@ -195,6 +195,7 @@ atask new \
 - `--project` - Project ID to associate with
 - `--estimate` - Time estimate (Fibonacci: 1,2,3,5,8,13)
 - `--tags` - Comma-separated tags
+- `--recur` - Recurrence pattern (requires `--due`)
 
 ### Linking Tasks to Projects
 
@@ -295,6 +296,7 @@ The `query` command provides powerful filtering with boolean expressions.
 - `estimate` - Fibonacci numbers (1,2,3,5,8,13)
 - `title` - Task title
 - `tag`, `tags` - Tags (checks if any tag matches)
+- `recur` - Recurrence pattern (use "empty" or "set", or match pattern like "weekly")
 - `content`, `body`, `text` - Full-text search in file content
 - `index_id` - Numeric ID
 
@@ -362,6 +364,7 @@ atask update --status paused 28,35-40,61
 - `--project` - Change project association
 - `--estimate` - Change time estimate
 - `--status` - Change status (open, done, paused, delegated, dropped)
+- `--recur` - Set recurrence pattern (use `none` to clear)
 
 ### Marking Tasks Complete
 
@@ -375,6 +378,48 @@ atask done 28,35,61
 # Mark range done
 atask done 10-15
 ```
+
+### Recurring Tasks
+
+Tasks can have a recurrence pattern. When a recurring task is marked done (via CLI or TUI), a new task is automatically created with the next due date. Recurring tasks show a `↻` indicator in list output.
+
+**Recurrence requires `--due` to be set.**
+
+```bash
+# Create recurring tasks
+atask new "Weekly review" --due monday --recur weekly
+atask new "Daily standup" --due tomorrow --recur daily
+atask new "Monthly report" --due "2026-03-01" --recur monthly
+atask new "Biweekly 1:1" --due friday --recur "every 2w"
+atask new "MWF workout" --due monday --recur "every mon,wed,fri"
+
+# Supported patterns:
+#   daily, weekly, monthly, yearly
+#   every <N>d, every <N>w, every <N>m, every <N>y  (e.g. every 2w, every 14d)
+#   every mon,wed,fri  (day-of-week, any combination)
+
+# Add recurrence to existing task
+atask update --recur weekly --due "2026-02-20" 28
+
+# Remove recurrence
+atask update --recur none 28
+
+# When marked done, next instance is auto-created:
+atask done 28
+# Output: ✓ Task ID 28 marked as done: Weekly review
+#         ↻ Created recurring task ID 131: Weekly review (due 2026-02-27)
+
+# Query recurring tasks
+atask query "recur:set" --json              # All recurring tasks
+atask query "recur:weekly" --json           # Tasks with weekly recurrence
+atask query "recur:empty AND due:set" --json  # Non-recurring tasks with due dates
+```
+
+**Behavior notes:**
+- Late completions advance to the next **future** date (won't create past-due tasks)
+- The new task copies priority, area, project, estimate, tags, and body content
+- Status resets to `open`; start_date and today_date are cleared
+- Works in both CLI (`atask done`) and TUI (press `d` in state menu)
 
 ### Batch Update with Conditional Filters
 
@@ -403,6 +448,7 @@ atask batch-update --where "status:paused" --due ""
 - `--area` - Change area
 - `--due` - Change due date
 - `--project` - Change project association
+- `--recur` - Set recurrence pattern (use `none` to clear)
 - `--dry-run` - Preview changes without applying them
 
 **Important:** Always use `--dry-run` first to preview changes!
@@ -450,6 +496,7 @@ atask list --all --json | jq 'group_by(.status) | map({status: .[0].status, coun
   "area": "work",
   "project_id": "20260201T120000",
   "estimate": 5,
+  "recur": "weekly",
   "tags": ["urgent", "security"],
   "modified_at": "2026-02-15T14:30:00Z",
   "project_name": "Website Redesign"
@@ -743,6 +790,7 @@ due_date: 2026-02-20
 area: work
 project_id: 20260201T120000
 estimate: 5
+recur: weekly
 tags: [urgent, security]
 ---
 
