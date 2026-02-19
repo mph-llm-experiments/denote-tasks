@@ -558,13 +558,19 @@ func parseTaskIDs(args []string) ([]int, error) {
 // Stub implementations for other commands
 func taskUpdateCommand(cfg *config.Config) *Command {
 	var (
-		priority string
-		due      string
-		area     string
-		project  string
-		estimate int
-		status   string
-		recur    string
+		priority     string
+		due          string
+		area         string
+		project      string
+		estimate     int
+		status       string
+		recur        string
+		addPerson    string
+		removePerson string
+		addTask      string
+		removeTask   string
+		addIdea      string
+		removeIdea   string
 	)
 
 	cmd := &Command{
@@ -582,6 +588,14 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 	cmd.Flags.IntVar(&estimate, "estimate", -1, "Set time estimate")
 	cmd.Flags.StringVar(&status, "status", "", "Set status (open, done, paused, delegated, dropped)")
 	cmd.Flags.StringVar(&recur, "recur", "", "Set recurrence (use 'none' to clear)")
+
+	// Cross-app relationship flags
+	cmd.Flags.StringVar(&addPerson, "add-person", "", "Add related contact (Denote ID)")
+	cmd.Flags.StringVar(&removePerson, "remove-person", "", "Remove related contact (Denote ID)")
+	cmd.Flags.StringVar(&addTask, "add-task", "", "Add related task (Denote ID)")
+	cmd.Flags.StringVar(&removeTask, "remove-task", "", "Remove related task (Denote ID)")
+	cmd.Flags.StringVar(&addIdea, "add-idea", "", "Add related idea (Denote ID)")
+	cmd.Flags.StringVar(&removeIdea, "remove-idea", "", "Remove related idea (Denote ID)")
 
 	cmd.Run = func(c *Command, args []string) error {
 		if len(args) == 0 {
@@ -685,6 +699,32 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 				changed = true
 			} else if recurPattern != "" {
 				t.TaskMetadata.Recur = recurPattern
+				changed = true
+			}
+
+			// Apply cross-app relationship updates
+			if addPerson != "" {
+				t.TaskMetadata.RelatedPeople = addToSlice(t.TaskMetadata.RelatedPeople, addPerson)
+				changed = true
+			}
+			if removePerson != "" {
+				t.TaskMetadata.RelatedPeople = removeFromSlice(t.TaskMetadata.RelatedPeople, removePerson)
+				changed = true
+			}
+			if addTask != "" {
+				t.TaskMetadata.RelatedTasks = addToSlice(t.TaskMetadata.RelatedTasks, addTask)
+				changed = true
+			}
+			if removeTask != "" {
+				t.TaskMetadata.RelatedTasks = removeFromSlice(t.TaskMetadata.RelatedTasks, removeTask)
+				changed = true
+			}
+			if addIdea != "" {
+				t.TaskMetadata.RelatedIdeas = addToSlice(t.TaskMetadata.RelatedIdeas, addIdea)
+				changed = true
+			}
+			if removeIdea != "" {
+				t.TaskMetadata.RelatedIdeas = removeFromSlice(t.TaskMetadata.RelatedIdeas, removeIdea)
 				changed = true
 			}
 

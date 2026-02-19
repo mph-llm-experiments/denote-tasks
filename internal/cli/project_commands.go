@@ -562,11 +562,17 @@ func projectTasksCommand(cfg *config.Config) *Command {
 // projectUpdateCommand updates project metadata
 func projectUpdateCommand(cfg *config.Config) *Command {
 	var (
-		priority  string
-		due       string
-		area      string
-		status    string
-		startDate string
+		priority     string
+		due          string
+		area         string
+		status       string
+		startDate    string
+		addPerson    string
+		removePerson string
+		addTask      string
+		removeTask   string
+		addIdea      string
+		removeIdea   string
 	)
 
 	cmd := &Command{
@@ -582,6 +588,14 @@ func projectUpdateCommand(cfg *config.Config) *Command {
 	cmd.Flags.StringVar(&startDate, "start", "", "Set start date")
 	cmd.Flags.StringVar(&area, "area", "", "Set area")
 	cmd.Flags.StringVar(&status, "status", "", "Set status (active, completed, paused, cancelled)")
+
+	// Cross-app relationship flags
+	cmd.Flags.StringVar(&addPerson, "add-person", "", "Add related contact (Denote ID)")
+	cmd.Flags.StringVar(&removePerson, "remove-person", "", "Remove related contact (Denote ID)")
+	cmd.Flags.StringVar(&addTask, "add-task", "", "Add related task (Denote ID)")
+	cmd.Flags.StringVar(&removeTask, "remove-task", "", "Remove related task (Denote ID)")
+	cmd.Flags.StringVar(&addIdea, "add-idea", "", "Add related idea (Denote ID)")
+	cmd.Flags.StringVar(&removeIdea, "remove-idea", "", "Remove related idea (Denote ID)")
 
 	cmd.Run = func(c *Command, args []string) error {
 		if len(args) == 0 {
@@ -650,6 +664,32 @@ func projectUpdateCommand(cfg *config.Config) *Command {
 					continue
 				}
 				p.ProjectMetadata.Status = status
+				changed = true
+			}
+
+			// Apply cross-app relationship updates
+			if addPerson != "" {
+				p.ProjectMetadata.RelatedPeople = addToSlice(p.ProjectMetadata.RelatedPeople, addPerson)
+				changed = true
+			}
+			if removePerson != "" {
+				p.ProjectMetadata.RelatedPeople = removeFromSlice(p.ProjectMetadata.RelatedPeople, removePerson)
+				changed = true
+			}
+			if addTask != "" {
+				p.ProjectMetadata.RelatedTasks = addToSlice(p.ProjectMetadata.RelatedTasks, addTask)
+				changed = true
+			}
+			if removeTask != "" {
+				p.ProjectMetadata.RelatedTasks = removeFromSlice(p.ProjectMetadata.RelatedTasks, removeTask)
+				changed = true
+			}
+			if addIdea != "" {
+				p.ProjectMetadata.RelatedIdeas = addToSlice(p.ProjectMetadata.RelatedIdeas, addIdea)
+				changed = true
+			}
+			if removeIdea != "" {
+				p.ProjectMetadata.RelatedIdeas = removeFromSlice(p.ProjectMetadata.RelatedIdeas, removeIdea)
 				changed = true
 			}
 

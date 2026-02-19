@@ -112,6 +112,11 @@ type TaskMetadata struct {
 	Assignee  string   `yaml:"assignee,omitempty" json:"assignee,omitempty"` // Person responsible
 	Recur     string   `yaml:"recur,omitempty" json:"recur,omitempty"`      // Recurrence pattern (e.g., daily, weekly, every 2w)
 	Tags      []string `yaml:"tags,omitempty" json:"tags,omitempty"`    // Additional tags beyond filename
+
+	// Cross-app relationship fields (asystem connective tissue)
+	RelatedPeople []string `yaml:"related_people,omitempty" json:"related_people"`
+	RelatedTasks  []string `yaml:"related_tasks,omitempty" json:"related_tasks"`
+	RelatedIdeas  []string `yaml:"related_ideas,omitempty" json:"related_ideas"`
 }
 
 // ProjectMetadata represents project-specific frontmatter per spec v2.0.0
@@ -125,6 +130,11 @@ type ProjectMetadata struct {
 	StartDate string   `yaml:"start_date,omitempty" json:"start_date,omitempty"` // YYYY-MM-DD format
 	Area      string   `yaml:"area,omitempty" json:"area,omitempty"`    // Life context
 	Tags      []string `yaml:"tags,omitempty" json:"tags,omitempty"`    // Additional tags beyond filename
+
+	// Cross-app relationship fields (asystem connective tissue)
+	RelatedPeople []string `yaml:"related_people,omitempty" json:"related_people"`
+	RelatedTasks  []string `yaml:"related_tasks,omitempty" json:"related_tasks"`
+	RelatedIdeas  []string `yaml:"related_ideas,omitempty" json:"related_ideas"`
 }
 
 // Task combines File info with TaskMetadata
@@ -133,6 +143,34 @@ type Task struct {
 	TaskMetadata
 	ModTime time.Time `json:"modified_at"` // File modification time
 	Content string    `json:"-"`           // Don't serialize full content in lists
+}
+
+// EnsureRelationSlices initializes nil relation slices to empty slices
+// so JSON output shows [] instead of null.
+func (m *TaskMetadata) EnsureRelationSlices() {
+	if m.RelatedPeople == nil {
+		m.RelatedPeople = []string{}
+	}
+	if m.RelatedTasks == nil {
+		m.RelatedTasks = []string{}
+	}
+	if m.RelatedIdeas == nil {
+		m.RelatedIdeas = []string{}
+	}
+}
+
+// EnsureRelationSlices initializes nil relation slices to empty slices
+// so JSON output shows [] instead of null.
+func (m *ProjectMetadata) EnsureRelationSlices() {
+	if m.RelatedPeople == nil {
+		m.RelatedPeople = []string{}
+	}
+	if m.RelatedTasks == nil {
+		m.RelatedTasks = []string{}
+	}
+	if m.RelatedIdeas == nil {
+		m.RelatedIdeas = []string{}
+	}
 }
 
 // IsTaggedForToday checks if the task is tagged for today
@@ -305,6 +343,21 @@ func (p *Project) GetParsedStartDate() *time.Time {
 		return nil
 	}
 	return &parsed
+}
+
+// HasNotBegun returns true if the project has a begin date in the future
+func (p *Project) HasNotBegun() bool {
+	if p.ProjectMetadata.StartDate == "" {
+		return false
+	}
+	loc := time.Now().Location()
+	start, err := time.ParseInLocation("2006-01-02", p.ProjectMetadata.StartDate, loc)
+	if err != nil {
+		return false
+	}
+	now := time.Now().In(loc)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	return start.After(today)
 }
 
 // GetParsedDueDate returns the parsed due date for a project

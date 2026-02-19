@@ -113,6 +113,9 @@ func ParseTaskFile(path string) (*Task, error) {
 		}
 	}
 
+	// Initialize relation slices (ensures JSON outputs [] not null)
+	task.TaskMetadata.EnsureRelationSlices()
+
 	// Set defaults per spec
 	if task.Status == "" {
 		task.Status = TaskStatusOpen
@@ -164,6 +167,9 @@ func ParseProjectFile(path string) (*Project, error) {
 			project.ProjectMetadata = projMeta
 		}
 	}
+
+	// Initialize relation slices (ensures JSON outputs [] not null)
+	project.ProjectMetadata.EnsureRelationSlices()
 
 	// Set defaults per spec
 	if project.Status == "" {
