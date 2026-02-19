@@ -27,6 +27,7 @@ func (m Model) handleProjectViewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				"p": "priority",
 				"s": "status",
 				"d": "due_date",
+				"B": "start_date",
 				"a": "area",
 				"t": "tags",
 			}
@@ -74,8 +75,8 @@ func (m Model) handleProjectViewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 						}
 					}
 					
-					// Re-sort if we updated a field that could affect order
-					if m.editingField == "d" || m.editingField == "p" {
+					// Re-sort if we updated a field that could affect order or visibility
+					if m.editingField == "d" || m.editingField == "p" || m.editingField == "B" {
 						m.applyFilters()
 						m.sortFiles()
 						m.loadVisibleMetadata()
@@ -212,6 +213,14 @@ func (m Model) handleProjectViewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.editBuffer = m.viewingProject.ProjectMetadata.DueDate
 			m.editCursor = len(m.editBuffer)
 			m.statusMsg = "Enter due date (YYYY-MM-DD or relative: 1d, 1w, tomorrow):"
+		}
+
+	case "B":
+		if m.projectViewTab == 0 {
+			m.editingField = "B"
+			m.editBuffer = m.viewingProject.ProjectMetadata.StartDate
+			m.editCursor = len(m.editBuffer)
+			m.statusMsg = "Enter begin date (YYYY-MM-DD or relative: 1d, 1w, tomorrow):"
 		}
 		
 	case "a":

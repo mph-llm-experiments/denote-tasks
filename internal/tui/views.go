@@ -408,8 +408,8 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 	// Use same status indicator style as tasks
 	status := "▶" // Project indicator
 	isActive := false
+	hasNotBegun := project.HasNotBegun()
 
-	// DEBUG: Check exact status matching
 	switch project.ProjectMetadata.Status {
 	case denote.ProjectStatusCompleted:
 		status = "●"
@@ -418,13 +418,14 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 	case denote.ProjectStatusCancelled:
 		status = "⨯"
 	case denote.ProjectStatusActive, "":
-		// Active or empty status - both treated as active
-		isActive = true
-		status = "▶" // Keep the project indicator
+		if hasNotBegun {
+			status = "▷" // Not yet begun indicator (outline triangle)
+		} else {
+			isActive = true
+			status = "▶"
+		}
 	default:
-		// Unexpected status - debug
 		status = "?"
-		// Will add debug to title later after it's defined
 	}
 	
 	// Priority - we'll color it later based on active status
@@ -486,13 +487,17 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 
 	// For priority, apply the color now
 	if priorityRaw != "" {
-		switch project.ProjectMetadata.Priority {
-		case "p1":
-			priority = priorityHighStyle.Render(priorityRaw)
-		case "p2":
-			priority = priorityMediumStyle.Render(priorityRaw)
-		case "p3":
-			priority = priorityLowStyle.Render(priorityRaw)
+		if hasNotBegun {
+			priority = pausedStyle.Render(priorityRaw)
+		} else {
+			switch project.ProjectMetadata.Priority {
+			case "p1":
+				priority = priorityHighStyle.Render(priorityRaw)
+			case "p2":
+				priority = priorityMediumStyle.Render(priorityRaw)
+			case "p3":
+				priority = priorityLowStyle.Render(priorityRaw)
+			}
 		}
 	}
 	
@@ -503,7 +508,9 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 		// Pad to 12 chars
 		dateStr = fmt.Sprintf("%-12s", dateStr)
 		
-		if denote.IsOverdue(project.ProjectMetadata.DueDate) {
+		if hasNotBegun {
+			dueDisplay = pausedStyle.Render(dateStr)
+		} else if denote.IsOverdue(project.ProjectMetadata.DueDate) {
 			dueDisplay = overdueStyle.Render(dateStr)
 		} else if denote.IsDueSoon(project.ProjectMetadata.DueDate, m.config.SoonHorizon) {
 			dueDisplay = lipgloss.NewStyle().Foreground(lipgloss.Color("214")).Render(dateStr)
@@ -532,6 +539,11 @@ func (m Model) renderProjectLine(index int, file denote.File, project *denote.Pr
 		titlePadded = cyanStyle.Render(titlePadded)
 		tagsPadded = cyanStyle.Render(tagsPadded)
 		areaPadded = cyanStyle.Render(areaPadded)
+	} else if hasNotBegun {
+		statusDisplay = pausedStyle.Render(status)
+		titlePadded = pausedStyle.Render(titlePadded)
+		tagsPadded = pausedStyle.Render(tagsPadded)
+		areaPadded = pausedStyle.Render(areaPadded)
 	} else {
 		statusDisplay = status
 	}

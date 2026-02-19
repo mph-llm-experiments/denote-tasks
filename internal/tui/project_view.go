@@ -173,9 +173,7 @@ func (m Model) renderProjectMain() string {
 	lines = append(lines, m.renderFieldWithHotkey("Tags", tagsDisplay, "not set", "t"))
 	
 	// Other metadata
-	if meta.StartDate != "" {
-		lines = append(lines, m.renderFieldWithHotkey("Start Date", meta.StartDate, "not set", ""))
-	}
+	lines = append(lines, m.renderFieldWithHotkey("Begin Date", meta.StartDate, "not set", "B"))
 	
 	// File info
 	lines = append(lines, "")

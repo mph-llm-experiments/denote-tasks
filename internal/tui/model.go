@@ -202,16 +202,17 @@ func (m *Model) hasAnyFilter() bool {
 func (m *Model) applyFilters() {
 	filtered := make([]denote.File, 0, len(m.files))
 
-	// Build set of paused/cancelled project IDs to hide their tasks
-	// (only when any filter is active)
-	pausedProjectIDs := make(map[string]bool)
+	// Build set of inactive project IDs (paused, cancelled, or not yet begun)
+	// to hide their tasks (only when any filter is active)
+	hiddenProjectIDs := make(map[string]bool)
 	if m.hasAnyFilter() {
 		for _, f := range m.files {
 			if f.IsProject() {
 				if proj, err := denote.ParseProjectFile(f.Path); err == nil {
 					if proj.ProjectMetadata.Status == denote.ProjectStatusPaused ||
-						proj.ProjectMetadata.Status == denote.ProjectStatusCancelled {
-						pausedProjectIDs[strconv.Itoa(proj.IndexID)] = true
+						proj.ProjectMetadata.Status == denote.ProjectStatusCancelled ||
+						proj.HasNotBegun() {
+						hiddenProjectIDs[strconv.Itoa(proj.IndexID)] = true
 					}
 				}
 			}
@@ -274,8 +275,8 @@ func (m *Model) applyFilters() {
 			}
 		}
 			
-			// Hide tasks belonging to paused/cancelled projects (when any filter is active)
-			if taskMeta != nil && taskMeta.ProjectID != "" && pausedProjectIDs[taskMeta.ProjectID] {
+			// Hide tasks belonging to inactive projects (paused, cancelled, or not yet begun)
+			if taskMeta != nil && taskMeta.ProjectID != "" && hiddenProjectIDs[taskMeta.ProjectID] {
 				continue
 			}
 
@@ -1064,6 +1065,16 @@ func (m *Model) updateProjectField(field, value string) error {
 				projectMeta.DueDate = parsed
 			} else {
 				projectMeta.DueDate = ""
+			}
+		case "start_date":
+			if value != "" {
+				parsed, err := denote.ParseNaturalDate(value)
+				if err != nil {
+					return fmt.Errorf("invalid date: %s (try: 2d, 1w, friday, jan 15, 2024-01-15)", value)
+				}
+				projectMeta.StartDate = parsed
+			} else {
+				projectMeta.StartDate = ""
 			}
 		case "area":
 			projectMeta.Area = value

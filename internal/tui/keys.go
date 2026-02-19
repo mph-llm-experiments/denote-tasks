@@ -584,6 +584,24 @@ func (m Model) handleTaskModeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 		}
 		
+	case "B":
+		// Edit begin date (projects only)
+		if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
+			file := m.filtered[m.cursor]
+			if file.IsProject() {
+				m.mode = ModeDateEdit
+				m.editingField = "B"
+				if project, err := denote.ParseProjectFile(file.Path); err == nil {
+					m.editBuffer = project.ProjectMetadata.StartDate
+				} else {
+					m.editBuffer = ""
+				}
+				m.editCursor = len(m.editBuffer)
+			} else {
+				m.statusMsg = "Begin date is only for projects"
+			}
+		}
+
 	case "e":
 		// Edit estimate
 		if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
@@ -1482,39 +1500,45 @@ func (m Model) handleDateEditKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		
-		// Update the due date
+		// Update the date field (due or begin depending on editingField)
+		isBeginDate := m.editingField == "B"
+		fieldLabel := "Due date"
+		if isBeginDate {
+			fieldLabel = "Begin date"
+		}
+
 		if len(m.filtered) > 0 && m.cursor < len(m.filtered) {
 			file := m.filtered[m.cursor]
-			
-			if file.IsTask() {
-				// Load fresh metadata from disk
+
+			if file.IsTask() && !isBeginDate {
 				if t, err := denote.ParseTaskFile(file.Path); err == nil {
 					t.TaskMetadata.DueDate = parsedDate
 					if err := task.UpdateTaskFile(file.Path, t.TaskMetadata); err != nil {
 						m.statusMsg = fmt.Sprintf(ErrorFormat, err)
 					} else {
 						if parsedDate == "" {
-							m.statusMsg = "Due date removed"
+							m.statusMsg = fieldLabel + " removed"
 						} else {
-							m.statusMsg = fmt.Sprintf("Due date set to %s", parsedDate)
+							m.statusMsg = fmt.Sprintf("%s set to %s", fieldLabel, parsedDate)
 						}
-						// Force UI to refresh
 						m.loadVisibleMetadata()
 					}
 				}
 			} else if file.IsProject() {
-				// Load fresh metadata from disk
 				if project, err := denote.ParseProjectFile(file.Path); err == nil {
-					project.ProjectMetadata.DueDate = parsedDate
+					if isBeginDate {
+						project.ProjectMetadata.StartDate = parsedDate
+					} else {
+						project.ProjectMetadata.DueDate = parsedDate
+					}
 					if err := denote.UpdateProjectFile(file.Path, project.ProjectMetadata); err != nil {
 						m.statusMsg = fmt.Sprintf(ErrorFormat, err)
 					} else {
 						if parsedDate == "" {
-							m.statusMsg = "Due date removed"
+							m.statusMsg = fieldLabel + " removed"
 						} else {
-							m.statusMsg = fmt.Sprintf("Due date set to %s", parsedDate)
+							m.statusMsg = fmt.Sprintf("%s set to %s", fieldLabel, parsedDate)
 						}
-						// Force UI to refresh
 						m.loadVisibleMetadata()
 					}
 				}
