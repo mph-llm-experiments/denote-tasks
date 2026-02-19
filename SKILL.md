@@ -367,6 +367,25 @@ atask update --status paused 28,35-40,61
 - `--status` - Change status (open, done, paused, delegated, dropped)
 - `--recur` - Set recurrence pattern (use `none` to clear)
 
+### Cross-App Relationships
+
+Link tasks to contacts (apeople), ideas (anote), or other tasks using Denote IDs:
+
+```bash
+# Add relationships
+atask update --add-person 20250612T080000 28
+atask update --add-idea 20250607T093045 28
+atask update --add-task 20250610T141230 28
+
+# Remove relationships
+atask update --remove-person 20250612T080000 28
+
+# Works on projects too
+atask project update --add-person 20250612T080000 15
+```
+
+Relationship fields in frontmatter: `related_people`, `related_tasks`, `related_ideas` (arrays of Denote IDs).
+
 ### Marking Tasks Complete
 
 ```bash
@@ -499,6 +518,9 @@ atask list --all --json | jq 'group_by(.status) | map({status: .[0].status, coun
   "estimate": 5,
   "recur": "weekly",
   "tags": ["urgent", "security"],
+  "related_people": ["20250612T080000"],
+  "related_tasks": [],
+  "related_ideas": [],
   "modified_at": "2026-02-15T14:30:00Z",
   "project_name": "Website Redesign"
 }
@@ -517,6 +539,9 @@ atask list --all --json | jq 'group_by(.status) | map({status: .[0].status, coun
   "start_date": "2026-02-01",
   "area": "work",
   "tags": ["q1-goals"],
+  "related_people": [],
+  "related_tasks": [],
+  "related_ideas": ["20250607T093045"],
   "modified_at": "2026-02-15T14:30:00Z",
   "task_count": 12
 }
