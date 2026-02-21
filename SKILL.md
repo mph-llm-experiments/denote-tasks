@@ -598,16 +598,23 @@ atask project new \
 ### List Projects
 
 ```bash
-# List active projects (default)
+# List active projects (default — hides paused, cancelled, and not-yet-begun)
 atask project list
 
-# List all projects
+# List all projects including inactive
 atask project list --all
 
 # Filter projects
 atask project list --area work
 atask project list -p p1
 atask project list --status completed
+
+# Sort projects
+atask project list --sort priority
+atask project list --sort due
+atask project list --sort begin       # by start/begin date
+atask project list --sort created
+atask project list --sort modified    # default
 ```
 
 ### View Project Tasks

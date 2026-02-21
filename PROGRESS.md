@@ -15,7 +15,11 @@ Fixed CLI `list` command to hide tasks from inactive projects (paused, cancelled
 
 ### Features Implemented ✅
 
-**1. CLI List Hides Inactive Project Tasks (v0.29.0)**
+**1. Sort Projects by Begin Date (v0.30.0)**
+- Added `begin` (and `start` alias) to `sortProjects` in project_commands.go
+- Earliest start date first, empty dates sorted last
+
+**2. CLI List Hides Inactive Project Tasks (v0.29.0)**
 - `atask list` now builds a hidden project set during first pass (same logic as TUI model.go)
 - Tasks belonging to paused, cancelled, or not-yet-begun projects are excluded
 - `--all` flag bypasses this filtering
@@ -32,6 +36,7 @@ Fixed CLI `list` command to hide tasks from inactive projects (paused, cancelled
 ### Releases
 - **v0.28.0** - `--begin` flag for update
 - **v0.29.0** - CLI list hides inactive project tasks
+- **v0.30.0** - Sort projects by begin date
 
 ---
 

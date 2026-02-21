@@ -741,9 +741,23 @@ func sortProjects(projects []*denote.Project, sortBy string, reverse bool) {
 				less = di < dj
 			}
 			
+		case "begin", "start":
+			// Sort by start date (earliest first, empty last)
+			si := projects[i].ProjectMetadata.StartDate
+			sj := projects[j].ProjectMetadata.StartDate
+			if si == "" && sj == "" {
+				less = false
+			} else if si == "" {
+				less = false
+			} else if sj == "" {
+				less = true
+			} else {
+				less = si < sj
+			}
+
 		case "created":
 			less = projects[i].File.ID < projects[j].File.ID
-			
+
 		case "modified":
 			fallthrough
 		default:
