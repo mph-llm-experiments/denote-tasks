@@ -560,6 +560,7 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 	var (
 		priority     string
 		due          string
+		begin        string
 		area         string
 		project      string
 		estimate     int
@@ -583,6 +584,7 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 	cmd.Flags.StringVar(&priority, "p", "", "Set priority (p1, p2, p3)")
 	cmd.Flags.StringVar(&priority, "priority", "", "Set priority (p1, p2, p3)")
 	cmd.Flags.StringVar(&due, "due", "", "Set due date")
+	cmd.Flags.StringVar(&begin, "begin", "", "Set begin/start date")
 	cmd.Flags.StringVar(&area, "area", "", "Set area")
 	cmd.Flags.StringVar(&project, "project", "", "Set project")
 	cmd.Flags.IntVar(&estimate, "estimate", -1, "Set time estimate")
@@ -665,6 +667,15 @@ func taskUpdateCommand(cfg *config.Config) *Command {
 					continue
 				}
 				t.TaskMetadata.DueDate = parsedDue
+				changed = true
+			}
+			if begin != "" {
+				parsedBegin, err := denote.ParseNaturalDate(begin)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Invalid begin date for task ID %d: %v\n", id, err)
+					continue
+				}
+				t.TaskMetadata.StartDate = parsedBegin
 				changed = true
 			}
 			if area != "" {

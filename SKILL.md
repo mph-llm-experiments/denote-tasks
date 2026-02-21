@@ -361,6 +361,7 @@ atask update --status paused 28,35-40,61
 
 - `-p, --priority` - Change priority
 - `--due` - Change due date
+- `--begin` - Change begin/start date
 - `--area` - Change area
 - `--project` - Change project association
 - `--estimate` - Change time estimate
@@ -467,6 +468,7 @@ atask batch-update --where "status:paused" --due ""
 - `--status` - Change status
 - `--area` - Change area
 - `--due` - Change due date
+- `--begin` - Change begin/start date
 - `--project` - Change project association
 - `--recur` - Set recurrence pattern (use `none` to clear)
 - `--dry-run` - Preview changes without applying them
