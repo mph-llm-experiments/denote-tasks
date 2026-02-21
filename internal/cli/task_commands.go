@@ -223,13 +223,20 @@ func taskListCommand(cfg *config.Config) *Command {
 			return fmt.Errorf("failed to scan directory: %v", err)
 		}
 
-		// First pass: collect all projects for name lookup
+		// First pass: collect all projects for name lookup and hidden status
 		projectNames := make(map[string]string) // index_id string -> Title
+		hiddenProjectIDs := make(map[string]bool)
 		for _, file := range files {
 			if file.IsProject() {
 				p, err := denote.ParseProjectFile(file.Path)
 				if err == nil {
-					projectNames[strconv.Itoa(p.IndexID)] = p.ProjectMetadata.Title
+					idStr := strconv.Itoa(p.IndexID)
+					projectNames[idStr] = p.ProjectMetadata.Title
+					if p.ProjectMetadata.Status == denote.ProjectStatusPaused ||
+						p.ProjectMetadata.Status == denote.ProjectStatusCancelled ||
+						p.HasNotBegun() {
+						hiddenProjectIDs[idStr] = true
+					}
 				}
 			}
 		}
@@ -253,6 +260,11 @@ func taskListCommand(cfg *config.Config) *Command {
 			}
 
 			if status != "" && t.TaskMetadata.Status != status {
+				continue
+			}
+
+			// Hide tasks belonging to inactive projects (paused, cancelled, or not yet begun)
+			if !all && t.TaskMetadata.ProjectID != "" && hiddenProjectIDs[t.TaskMetadata.ProjectID] {
 				continue
 			}
 

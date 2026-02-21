@@ -218,11 +218,17 @@ atask new \
 
 ### Basic Listing
 
+**Default behavior:** `atask list` shows open tasks only, hiding:
+- Done, paused, delegated, and dropped tasks
+- Tasks belonging to paused, cancelled, or not-yet-begun projects
+
+Use `--all` to include everything.
+
 ```bash
-# List open tasks (default)
+# List open tasks (default — hides inactive project tasks)
 atask list
 
-# List all tasks including completed
+# List ALL tasks including completed and hidden project tasks
 atask list --all
 
 # List with specific filters

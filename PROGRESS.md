@@ -7,6 +7,34 @@ Features that compile but haven't been tested must be marked as "IMPLEMENTED BUT
 
 ---
 
+## Session: 2026-02-20 - CLI List Parity with TUI
+
+### Summary
+
+Fixed CLI `list` command to hide tasks from inactive projects (paused, cancelled, or not-yet-begun), matching the TUI's existing behavior. Also added `--begin` flag to `update` command.
+
+### Features Implemented ✅
+
+**1. CLI List Hides Inactive Project Tasks (v0.29.0)**
+- `atask list` now builds a hidden project set during first pass (same logic as TUI model.go)
+- Tasks belonging to paused, cancelled, or not-yet-begun projects are excluded
+- `--all` flag bypasses this filtering
+- Fixes aweb showing tasks from paused projects in the web UI
+
+**2. `--begin` Flag for Update (v0.28.0)**
+- Added `--begin` flag to `atask update` command
+- Parses natural language dates via `denote.ParseNaturalDate`
+- Sets `TaskMetadata.StartDate`
+
+### Files Modified
+- `internal/cli/task_commands.go` - Added hidden project filtering to list, added --begin to update
+
+### Releases
+- **v0.28.0** - `--begin` flag for update
+- **v0.29.0** - CLI list hides inactive project tasks
+
+---
+
 ## Session: 2026-02-18 (Continued) - UX Improvements & Project ID Migration
 
 ### Summary

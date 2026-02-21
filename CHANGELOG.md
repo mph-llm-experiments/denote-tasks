@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-02-20
+
+### Fixed
+- **CLI list hides inactive project tasks** - `atask list` now hides tasks belonging to paused, cancelled, or not-yet-begun projects (matching TUI behavior). Use `--all` to show everything.
+
+## [0.28.0] - 2026-02-20
+
+### Added
+- **`--begin` flag for update command** - Set or change begin/start date on tasks via CLI (`atask update --begin 2026-03-01 <id>`)
+
+## [0.27.0] - 2026-02-18
+
+### Added
+- **Begin date support** - Tasks and projects can have a start/begin date; projects with future start dates are hidden from default views
+- **Hide not-yet-begun project tasks** - TUI hides tasks from projects whose start date hasn't arrived
+
+## [0.26.0] - 2026-02-18
+
+### Added
+- **Cross-app relationship fields** - Tasks and projects now support `related_people`, `related_tasks`, `related_ideas` for linking across asystem apps
+- **Relationship CLI flags** - `--add-person`, `--remove-person`, `--add-task`, `--remove-task`, `--add-idea`, `--remove-idea` on update commands
+
+## [0.25.0] - 2026-02-18
+
+### Added
+- **Hide tasks from paused/cancelled projects** in TUI
+- **R hotkey** to refresh task list in TUI
+
+### Fixed
+- Show separate task and project counts in header
+
 ## [0.24.0] - 2026-02-18
 
 ### Added
