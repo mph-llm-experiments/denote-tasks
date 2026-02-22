@@ -7,11 +7,9 @@ require (
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/fatih/color v1.18.0
-	github.com/mph-llm-experiments/acore v0.0.0-00010101000000-000000000000
+	github.com/mph-llm-experiments/acore v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/mph-llm-experiments/acore => ../acore
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
